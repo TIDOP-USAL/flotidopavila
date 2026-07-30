@@ -324,7 +324,7 @@ function addLayerFill(nombre_source, nombre_capa, nombre_json, color, mostrar) {
 $(document).ready(function(event) {
     $(".input-cuencas").on("change", function () {
         cuenca = $(this).val();
-        if (cuenca === "Todas") {
+        if (cuenca === "Todao") {
             if (map.getLayer("Embalses-layer-fill")) {
                 map.setFilter("Embalses-layer-fill", null);
                 map.setFilter("Embalses-layer-borders", null);
