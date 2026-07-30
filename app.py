@@ -69,4 +69,5 @@ def pv_modules():
         # Captura cualquier otro error inesperado (como errores de encoding o delimitadores)
         return jsonify({"error": "Ocurrió un error inesperado", "mensaje": str(e)}), 500
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5003, debug=True)
+    port = int(os.environ.get('PORT', 5003))
+    app.run(host='0.0.0.0', port=port, debug=True
