@@ -1,0 +1,271 @@
+{%  extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <header>
+		<div class="logos">
+			<img src="/static/img/logo1.png" width="173" height = "80"/>
+			<!--<img src="/static/img/proyecto.png" width="270" height = "76"/>-->
+			<img src="/static/img/tidopLogo.png" width="150" height = "62"/>
+		</div>
+		<nav id="main-menu">
+			<ul>
+				<li>
+					<div class="menu">
+						<div>Capas</div><div class="img-menu"><img src="./static/img/menu.png" widht="24" height="24" alt="menu" ></div>
+					</div>
+					<div class="submenu">
+						<div id="botones"></div>
+					</div>
+				</li>
+				<li>
+					<div class="menu">
+						<div>Resticciones / Criterios </div><div class="img-menu"><img src="./static/img/menu.png" width="24" height="24" alt="menu" ></div>
+					</div>
+					<div id="botones-criterios" class="submenu">
+					</div>
+				</li>
+				<li>
+					<div class="menu">
+						<div>Métodos Ponderación</div><div class="img-menu"><img src="/static/img/menu.png" width="24" height="24" alt="menu" ></div>
+					</div>
+					<div class="submenu">
+						<div class="ponderacion"><span class="text-ponderacion">Método Arbitrario</span><span class="input-ponderacion">
+							<div class="vc-toggle-container">
+								<div><label class="vc-switch">
+									<input type="radio" class="vc-switch-input ponderacionRadio" id="Arbitrario" value="Arbitrario" checked=""  name="ponderacion">
+									<span class="vc-switch-label" data-on="Si" data-off="No"></span>
+									<span class="vc-handle"></span>
+								</label>
+								</div>
+							</div></span>
+						</div>
+						<div class="ponderacion"><span class="text-ponderacion">Método Objetivo (Critic)</span><span class="input-ponderacion">
+							<div class="vc-toggle-container">
+								<div><label class="vc-switch">
+									<input type="radio" class="vc-switch-input ponderacionRadio" id="Objetivo" value="Critic" name="ponderacion">
+									<span class="vc-switch-label" data-on="Si" data-off="No"></span>
+									<span class="vc-handle"></span>
+								</label>
+								</div>
+							</div></span>
+						</div>
+						<div class="ponderacion"><span class="text-ponderacion">Método Subjetivo (AHP)</span><span class="input-ponderacion">
+							<div class="vc-toggle-container">
+								<div><label class="vc-switch">
+									<input type="radio" class="vc-switch-input ponderacionRadio" id="Subjetivo" value="AHP" name="ponderacion">
+									<span class="vc-switch-label" data-on="Si" data-off="No"></span>
+									<span class="vc-handle"></span>
+								</label>
+								</div>
+							</div></span>
+						</div>
+
+
+					</div>
+				</li>
+				<li>
+					<div class="menu">
+						<div>Métodos Ranking</div><div class="img-menu"><img src="/static/img/menu.png" width="24" height="24" alt="menu" ></div>
+					</div>
+					<div class="submenu">
+						<div class='metodo'>
+							<span class='text-metodo'>Metodo Copras</span>
+							<span class='input-metodo'>
+								<div class='vc-toggle-container'>
+									<div><label class='vc-switch'>
+										<input type='radio' name='metodo' class='vc-switch-input' id='copras' value='copras' checked>
+											<span class='vc-switch-label' data-on='Si' data-off='No'></span>
+											<span class='vc-handle'></span>
+										</label>
+									</div>
+								</div>
+							</span>
+						</div>
+						<div class='metodo'>
+							<span class='text-metodo'>Metodo Waspas</span>
+							<span class='input-metodo'>
+								<div class='vc-toggle-container'>
+									<div><label class='vc-switch'>
+										<input type='radio' name='metodo' class='vc-switch-input' id='waspas' value='waspas'>
+											<span class='vc-switch-label' data-on='Si' data-off='No'></span>
+											<span class='vc-handle'></span>
+										</label>
+									</div>
+								</div>
+							</span>
+						</div>
+						<div class='metodo'>
+							<span class='text-metodo'>Metodo Edas</span>
+							<span class='input-metodo'>
+								<div class='vc-toggle-container'>
+									<div><label class='vc-switch'>
+										<input type='radio' name='metodo' class='vc-switch-input' id='edas' value='edas'>
+											<span class='vc-switch-label' data-on='Si' data-off='No'></span>
+											<span class='vc-handle'></span>
+										</label>
+									</div>
+								</div>
+							</span>
+						</div>
+						<div class='metodo'>
+							<span class='text-metodo'>Metodo Mabac</span>
+							<span class='input-metodo'>
+								<div class='vc-toggle-container'>
+									<div><label class='vc-switch'>
+										<input type='radio' name='metodo' class='vc-switch-input' id='mabac' value='mabac'>
+											<span class='vc-switch-label' data-on='Si' data-off='No'></span>
+											<span class='vc-handle'></span>
+										</label>
+									</div>
+								</div>
+							</span>
+						</div>
+						<div class="metodo"><span class="text-metodo">WSM</span><span class="input-metodo">
+							<div class="vc-toggle-container">
+								<div><label class="vc-switch">
+									<input type="radio" class="vc-switch-input " id="WSP" value="WSP" name="metodo">
+									<span class="vc-switch-label" data-on="Si" data-off="No"></span>
+									<span class="vc-handle"></span>
+								</label>
+								</div>
+							</div></span>
+						</div>
+
+						<div id='calculated-area' >
+							<input type='button' id='script' name='scriptbutton' value=' Calcular' onClick='DialogCalcularDatos()'><br>
+							<div id='resultado'></div>
+						</div>
+
+					</div>
+				</li>
+
+				<li class="espacio"></li>
+				<li style="margin-left:auto;">
+					<div class="menu" >
+						<div>Terreno</div><div class="img-menu"><img src="./static/img/menu.png" widht="24" height="24" alt="menu" ></div>
+					</div>
+					<div id="botones-terreno" class="submenu vc-toggle-container">
+						<div class="el-radio el-radio-green">
+							<input id="google" type="radio" name="rtoggle"  >
+							<label for="google" class="el-radio-style">
+							<span class="text-terreno">Google</span></label>
+						</div>
+						<div class="el-radio el-radio-green">
+							<input id="hybrid" type="radio" name="rtoggle"  >
+							<label for="hybrid" class="el-radio-style">
+							<span class="text-terreno">Satelite</span></label>
+						</div>
+						<div class="el-radio el-radio-green">
+							<input id="positron" type="radio" name="rtoggle"  checked="checked">
+							<label for="positron" class="el-radio-style">
+							<span class="text-terreno">Estandar</span></label>
+						</div>
+						<div class="el-radio el-radio-green">
+							<input id="streets" type="radio" name="rtoggle">
+							<label for="streets" class="el-radio-style">
+							<span class="text-terreno">3D</span></label>
+						</div>
+						<div class="el-radio el-radio-green">
+							<input id="bright" type="radio" name="rtoggle" >
+							<label for="bright" class="el-radio-style">
+							<span class="text-terreno">Claro</span></label>
+						</div>
+
+						<div class="el-radio el-radio-green">
+							<input id="openstreetmap" type="radio" name="rtoggle" >
+							<label for="openstreetmap" class="el-radio-style">
+							<span class="text-terreno">OSM</span></label>
+						</div>
+						<div class="el-radio el-radio-green">
+							<input id="landscape" type="radio" name="rtoggle" >
+							<label for="landscape" class="el-radio-style">
+							<span class="text-terreno">Landscape</span></label>
+						</div>
+						<div class="el-radio el-radio-green">
+							<input id="outdoor" type="radio" name="rtoggle" >
+							<label for="outdoor" class="el-radio-style">
+							<span class="text-terreno">Exterior</span></label>
+						</div>
+					</div>
+				</li>
+
+			</ul>
+		</nav>
+    </header>
+    <div id="map"></div>
+</div>
+<div id="dialog-message">
+</div>
+<div id="dialogo-multicriterio" style="display:none">
+	<div class="mensaje">
+		<div class="info-embalse">
+			<div class="solo-anio" style="display: grid;"><label for="anio-multi">Año:</label>
+				<input id="anio-multi" type="number" placeholder="Ej: 2025"></div>
+			<div class="orientacion"><label for="orientacion-multi">Orientación (grados):</label>
+				<input id="orientacion-multi" type="number" min="0" max="360" placeholder="0-360" value="0"></div>
+			<div class="inclinacion"><label for="inclinacion-multi">Inclinación (grados):</label>
+				<input id="inclinacion-multi" type="number" min="0" max="90" placeholder="0-90" value="23"></div>
+			<div class="ocupacion"><label for="ocupacion-multi">Ocupación (porcentaje):</label>
+				<input id="ocupacion-multi" type="number" min="0" max="100" placeholder="0-100" value="15"></div>
+			<div class="bifacial"><label for="bifacial-multi">¿Panel bifacial?</label>
+				<select id="bifacial-multi" onchange="cambiarMarcaPanel('-multi')">
+					<option value="">-- Seleccionar opción --</option>
+					<option value="Y">Sí</option>
+					<option value="N">No</option>
+				</select></div>
+			<div class="marca-panel"><label for="marcaPanel-multi">Marca panel:</label>
+				<select id="marcaPanel-multi" onchange="cambiarModelosPanel('-multi')">
+					<option value="">-- Seleccionar marca --</option>
+				</select></div>
+			<div class="modelo-panel"><label for="modeloPanel-multi">Modelo panel:</label>
+				<select id="modeloPanel-multi">
+					<option value="">-- Elige una marca --</option>
+				</select></div><div class="modelo-solar">Elige Modelo Solar:</div>
+			<div class="modelos-solares">
+				<span><input type="radio" id="Modelo_energetico-multi" name="modelo-solar-multi" checked="">
+					<label for="Modelo_energetico-multi">Modelo Energetico</label></span>
+				<span><input type="radio" id="Modelo_Diodo_Simple-multi" name="modelo-solar-multi">
+					<label for="Modelo_Diodo_Simple-multi">Modelo Diodo Simple</label></span></div>
+			<div class="boton-calcular"><button id="btnCalcular" onclick="CalcularDatos()">Calcular</button></div>
+			<div id="mensaje-embalse"></div>
+		</div>
+	</div>
+</div>
+
+<div id="dialog-jerarquizado"></div>
+<div class="loader"></div>
+<div class="resultadoEmbalses"></div>
+<div class="cuencas">
+	 <p>Cuencas</p>
+<div id="botones-categorias" class="vc-toggle-container">
+    <div class="el-radio el-radio-green">
+        <input class="input-cuencas" id="todas" type="radio" name="categoria" value="Todas" checked="checked">
+        <label for="todas" class="el-radio-style">
+        <span class="text-cuencas">Todas</span></label>
+
+    </div>
+    <div class="el-radio el-radio-green">
+        <input class="input-cuencas" id="cuencaDuero" type="radio" name="categoria" value="Duero" >
+        <label for="cuencaDuero" class="el-radio-style">
+        <span class="text-cuencas">Cuenca Duero</span></label>
+
+    </div>
+	<div class="el-radio el-radio-green">
+        <input class="input-cuencas" id="cuencaTajo" type="radio" name="categoria" value="Tajo" >
+        <label for="cuencaTajo" class="el-radio-style">
+        <span class="text-cuencas">Cuenca Tajo</span></label>
+
+    </div>
+
+</div>
+</div>
+
+<script>
+    mostrarMapa();
+	loadCriterios();
+	leerDatosCSV();
+	crearTablaDialogoJerarquizado();
+</script>
+
+{% endblock %}
