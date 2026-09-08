@@ -1,5 +1,5 @@
-import os
-os.environ["ENTSOE_ENDPOINT_URL"] = "https://external-api.tp.entsoe.eu/api"
+#import os
+#os.environ["ENTSOE_ENDPOINT_URL"] = "https://external-api.tp.entsoe.eu/api"
 from entsoe import EntsoePandasClient
 
 def callentsoe(country_code, start_date, end_date):    
