@@ -144,7 +144,9 @@ header, .container{
     transition: all 0.4s linear 0s;
     visibility: hidden;
 }
-
+#main-menu>ul>li:nth-child(2) .submenu{
+   width:330px;
+}
 #botones-terreno{
     right:10px;
     left:auto;
@@ -324,7 +326,7 @@ header, .container{
     position: absolute;
     flex-direction: column;
     left: 10px;
-    bottom: 180px;
+    bottom: 275px;
     width: 170px;
     background-color: white;
     border-radius: 5px;

@@ -27,10 +27,7 @@ se llama a la funcion calsEmbalses y se devuelve un geojson con los resultados
 def calcularEmbalses():
     try:
         datos = request.get_json()
-        print(datos)
         datos = calsEmbalses(datos)
-
-        #response = {"geoJson": 'mensaje'},200
         response = {"geoJson": datos['mensaje']},200
         return response
     except FileNotFoundError:

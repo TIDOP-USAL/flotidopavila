@@ -89,6 +89,12 @@ def matrizX(criterios, omegaC, Signo, cuenca, paneles, datos_entsoe, Metodo, pon
         omega.append(omegaC[6])
         borrados.append(0)
 
+    if criterios[7] == 'Si':
+        matrizX.append(datos['Regadios'])
+        valueSign.append(Signo[7])
+        omega.append(omegaC[7])
+        borrados.append(0)
+
     Path = os.path.join(PathBase, 'Results', cuenca+'_'+Metodo+'_'+ponderacion+'_datosUnidos.csv')
     datos.to_csv(Path, index=False)
 
@@ -99,7 +105,7 @@ def matrizX(criterios, omegaC, Signo, cuenca, paneles, datos_entsoe, Metodo, pon
 def calcularLCOEyEmisionesyCF(paneles, posiciones, datos_entsoe):
     TafEnergy = cargar_tarifa_entsoe(datos_entsoe["fecha_inicio"], datos_entsoe["fecha_fin"], datos_entsoe["country_code"])
     PathBase = os.path.dirname(os.path.abspath(__file__))
-    Path = os.path.join(PathBase, '..','static','datos','embalses.geojson')
+    Path = os.path.join(PathBase, '..','static','datos','union.geojson')
     embalses = gpd.read_file(Path)
     LCOE = []
     Emisiones = []
@@ -107,6 +113,7 @@ def calcularLCOEyEmisionesyCF(paneles, posiciones, datos_entsoe):
     Energia = []
     for posicion in posiciones:
     #for index, embalse in embalses.iterrows():
+        print("posicion:",posicion)
         embalse = embalses.iloc[posicion]
         geometry = embalse['geometry'].centroid
         paneles['area'] = embalse['area']  # *area embalse
@@ -281,7 +288,7 @@ def MatrizM(MatrizCopareada):
 
 
 def calsEmbalses(datos):
-
+    t0 = time.time()
     critery = datos["criterios"]["Criterios"]
     omegaC = datos["criterios"]["OmegaC"]
     cuenca = datos ["cuenca"]
@@ -298,10 +305,10 @@ def calsEmbalses(datos):
         "fecha_fin": datos["paneles"]["fechaFin"],
         "country_code": "ES"
     }
-    t0 = time.time()
 
 
-    Signo = ['+', '-', '-', '-','-', '+', '+']
+
+    Signo = ['+', '-', '-', '-','-', '+', '+', '+']
 
     pos, longitude, latitude, X, signo, omega = matrizX(critery, omegaC, Signo, cuenca, paneles, datos_entsoe, Metodo, ponderacion)
 
@@ -325,7 +332,7 @@ def calsEmbalses(datos):
     geoJson = generateGeoJsonyCSV(pos, longitude, latitude, ranking, value, cuenca, Metodo, ponderacion)
 
     tf = time.time()
-    print(tf-t0)
+    print(f'Tiempo total: {tf-t0} segundos')
 
     return {"mensaje":geoJson}
 

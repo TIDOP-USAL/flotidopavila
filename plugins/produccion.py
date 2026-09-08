@@ -265,7 +265,7 @@ def cargar_tarifa_entsoe(FechaInicio, Fechafinal, country_code):
     start_utc = start_local.tz_convert("UTC")
     end_utc_exclusive = end_local_exclusive.tz_convert("UTC")
 
-    # --- Llamada ENTSO-E ---
+    # --- Llamada ENTSO-E ---.
     TafEnergy = callentsoe(country_code, start_utc, end_utc_exclusive)  # €/MWh
 
     # Asegurar tz-aware en UTC si viniera naive

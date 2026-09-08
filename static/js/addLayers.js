@@ -3,16 +3,18 @@
  */
 async function loadLayers() {
     $(".loader").fadeIn(300);
+
     paralelosMeridianos();
     let botones = '';
     for (i=0; i<puntos.length; i++){
-        visible = checkIfVisible(puntos[i].nombreCapa, puntos[i].checked);
+        visible = checkIfVisible(puntos[i].nombreCapa, puntos[i].mostrar);
         addLayerPoint(puntos[i].imagen, puntos[i].nombreImagen, puntos[i].nombreSource, puntos[i].nombreCapa, puntos[i].nombreJson, visible);
-        botones += addButton(puntos[i].texto, puntos[i].nombreCapa, puntos[i].imagen, visible);
+        botones +=  addButton(puntos[i].texto, puntos[i].nombreCapa, puntos[i].imagen, visible);
     }
     for (i=0; i<lineas.length; i++) {
-        visible = checkIfVisible(lineas[i].nombreCapa, lineas[i].checked);
-        addLayerLines(lineas[i].nombreSource, lineas[i].nombreCapa, lineas[i].nombreJson, lineas[i].color, lineas[i].mostrar, lineas[i].grosor, visible);
+        visible = checkIfVisible(lineas[i].nombreCapa, lineas[i].mostrar);
+        addLayerLines(lineas[i].nombreSource, lineas[i].nombreCapa, lineas[i].nombreJson, lineas[i].color, visible, lineas[i].grosor);
+
         botones += addButton(lineas[i].texto,  lineas[i].nombreCapa, lineas[i].imagen, visible);
     }
     for (i=0; i<rellenos.length; i++) {
@@ -20,12 +22,42 @@ async function loadLayers() {
         addLayerFill(rellenos[i].nombreSource, rellenos[i].nombreCapa, rellenos[i].nombreJson, rellenos[i].color,  visible);
         botones += addButton(rellenos[i].texto, rellenos[i].nombreCapa, rellenos[i].imagen, visible);
     }
+
+    visible = checkIfVisible("Regadio-layer", 'none');
+    addLayerRegadio("Regadio","Regadio-layer", visible);
+    botones += addButton("Regadio","Regadio-layer", "static/img/regadio.png", visible);
     $(control_botones).html(botones);
     map.once('idle', () => {
         $(".loader").fadeOut(300);
     });
+
 }
-	
+
+
+
+function addLayerRegadio(nombre_source, nombre_capa, mostrar) {
+
+    if (map.getSource(nombre_source) || mostrar == 'none') { return;}
+    map.addSource(nombre_source, {
+        "type": "image",
+        "url": "/static/datos/cultivos.png",
+        "coordinates": [
+            [-5.756169013, 41.175912336],
+            [-4.152273713, 41.175912336],
+            [-4.152273713, 40.072198304],
+            [-5.756169013, 40.072198304]
+        ]
+    });
+    map.addLayer({
+        id:  nombre_capa,
+        'type': 'raster',
+        'source': nombre_source,
+        'paint': {
+            'raster-fade-duration': 0
+        }
+    });
+     map.setLayoutProperty(nombre_capa,'visibility', visible);
+}
 
  /**
  * Tenemos el problema que al cambiar el estilo del mapa se borran todas las capas que hemos puesto, pues al cambiar el estilo se
