@@ -8,6 +8,12 @@ geopandas==1.0.1
 numpy==2.4.6
 scipy==1.17.0
 pvlib==0.15.2
-gunicorn  
-
+gunicorn # lo uso para el despliegue en render
+flask-sqlalchemy==3.1.1
+flask-babel==4.0.0
+flask-migrate==4.1.0
+flask-admin==2.2.0
+flask-login==0.6.3
+flask-security==5.8.2
+flask-bcrypt==1.0.1
 

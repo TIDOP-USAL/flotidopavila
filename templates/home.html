@@ -5,11 +5,18 @@
     <header>
 		<div class="logos">
 			<img src="/static/img/logo1.png" width="173" height = "80"/>
-			<!--<img src="/static/img/proyecto.png" width="270" height = "76"/>-->
+			<img src="/static/img/proyecto.png" width="270" height = "76"/>
 			<img src="/static/img/tidopLogo.png" width="150" height = "62"/>
 		</div>
 		<nav id="main-menu">
 			<ul>
+				<li style="margin-left:auto;">
+					<div class="menu" >
+						<div class="settings"><a href="/" style="color:white;text-decoration:none">
+							<img src="/static/img/settings.png" width="28" height="14" alt="settings" style="vertical-align: middle">
+							</a></div>
+					</div>
+            	</li>
 				<li>
 					<div class="menu">
 						<div>Capas</div><div class="img-menu"><img src="./static/img/menu.png" widht="24" height="24" alt="menu" ></div>
@@ -197,9 +204,39 @@
 </div>
 <div id="dialog-message">
 </div>
+
+<div id="dialogo-embalse" style="display:none">
+	<div class="mensaje-embalse">
+		<div class="info-embalse"><b><span class="nombre">SAN BARTOLOMÉ DE TIRAJANA</span></b><br>
+			<div><span>Area: </span><span><span class="area-embalse">6698 m</span><sup>2</sup></span></div>
+			<div class="opciones-calculo">    <label>        <input type="checkbox" id="checkCalcularPaneles" onchange="calcularPaneles()"> ¿Calcular número de paneles?    </label></div>
+			<div class="fecha"><label for="fecha">Fecha:</label><input id="fecha" class="calendar flatpickr flatpickr-input" type="text" placeholder="Seleccionar fecha.." readonly="readonly"></div>
+			<div class="num-paneles"><label for="numPaneles">Número de paneles:</label><input id="numPaneles" type="number" min="1" placeholder="Ej: 100"></div>
+			<div class="solo-anio"><label for="anio">Año:</label><input id="anio" type="number" placeholder="Ej: 2024" onchange="cambioAnio()"></div>
+			<div class="dia-hora"><label for="dia-hora">Dia y Hora del año:</label><input id="dia-hora" class="calendar-dia-hora flatpickr-dia-hora flatpickr-dia-hora-input flatpickr-input" type="text" placeholder="Seleccionar fecha.." readonly="readonly"></div>
+			<div class="orientacion"><label for="orientacion">Orientación (grados):</label><input id="orientacion" type="number" min="0" max="360" placeholder="0-360" value="0"></div>
+			<div class="inclinacion"><label for="inclinacion">Inclinación (grados):</label><input id="inclinacion" type="number" min="0" max="90" placeholder="0-90" value="23"></div>
+			<div class="ocupacion"><label for="ocupacion">Ocupación (porcentaje):</label><input id="ocupacion" type="number" min="0" max="100" placeholder="0-100" value="15"></div>
+			<div class="bifacial"><label for="bifacial">¿Panel bifacial?</label><select id="bifacial" onchange="cambiarMarcaPanel()"><option value="">-- Seleccionar opción --</option><option value="Y">Sí</option><option value="N">No</option></select></div>
+			<div class="marca-panel"><label for="marcaPanel">Marca panel:</label><select id="marcaPanel" onchange="cambiarModelosPanel()"><option value="">-- Seleccionar marca --</option></select></div>
+			<div class="modelo-panel"><label for="modeloPanel">Modelo panel:</label><select id="modeloPanel"><option value="">-- Elige una marca --</option></select></div>
+			<div class="modelo-solar">Elige Modelo Solar:</div>
+			<div class="modelos-solares">
+				<span><input type="radio" id="Modelo_energetico" name="modelo-solar" checked="">
+					<label for="Modelo_energetico">Modelo Energetico</label></span>
+				<span><input type="radio" id="Modelo_Diodo_Simple" name="modelo-solar">
+					<label for="Modelo_Diodo_Simple">Modelo Diodo Simple</label></span></div>
+			<div class="boton-info-embalse"></div>
+		</div>
+		<div id="mensaje-embalse-produccion"></div>
+	</div>
+</div>
 <div id="dialogo-multicriterio" style="display:none">
 	<div class="mensaje">
 		<div class="info-embalse">
+			<div class="nombre-analisis"><label for="nombre-analisis">Nombre del estudio:</label>
+				<input id="nombre-analisis" type="text" placeholder="Ej: Análisis con el método Copras">
+			</div>
 			<div class="solo-anio" style="display: grid;"><label for="anio-multi">Año:</label>
 				<input id="anio-multi" type="number" placeholder="Ej: 2025"></div>
 			<div class="orientacion"><label for="orientacion-multi">Orientación (grados):</label>
@@ -280,10 +317,18 @@
 </div>
 
 <script>
-    mostrarMapa();
+	let resultado = {{ resultado | tojson  }};
+	
+	const url = resultado['url'];
+	mostrarMapa();
 	loadCriterios();
 	leerDatosCSV();
 	crearTablaDialogoJerarquizado();
+	if (typeof url !== "undefined" && url !== null)  {
+		cuenca = resultado["cuenca"];
+    	//const metodo = resultado["metodo"];
+		pintarResultadosAnalisis(url,cuenca);
+	}
 </script>
 
 {% endblock %}

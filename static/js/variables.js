@@ -1,7 +1,7 @@
 let map;
 const accessToken= 'CXYEP8Nfe44zGcei0GvU';
 const control_botones = '#botones';
-let cuenca = "Todas";
+let cuenca = "Todos";
 const puntos = [
     //{texto:'Consumo', imagen:'./static/img/consumo.png', nombreImagen:'consumoImg', nombreSource:'Consumo', nombreCapa:'Consumo-layer', nombreJson:'./static/datos/centros_consumo.geojson', checked:'visible'},
 ];
@@ -25,3 +25,4 @@ const valuesCriteriosAHP=[["1","3","5","1","4","5","5"],["1/3","1","1/2","1/2","
     ["1","2","3","1","4","5","5"],["1/4","1/3","1/2","1/4","1","2","2"],["1/5","1/3","1/3","1/5","1/2","1","1"],
     ["1/5","1/3","1/3","1/5","1/2","1","1"]];
 let datosPaneles, nombreCompaniaPanel;
+let calendarTime;

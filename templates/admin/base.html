@@ -1,0 +1,260 @@
+{% import 'admin/layout.html' as layout with context -%}
+{% import 'admin/static.html' as admin_static with context %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Panel de Control</title>
+
+    {% block head_meta %}
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Flask-Admin dashboard login template">
+        <link rel="icon" href="/static/img/favicon.svg"/>
+    {% endblock head_meta %}
+
+    {% block head_css %}
+        <link href="{{ admin_static.url(filename='bootstrap/bootstrap4/css/bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ admin_static.url(filename='admin/css/bootstrap4/admin.css') }}" rel="stylesheet">
+        <link href="/static/admin/vendor/select2/select2.css?v=4.2.1" rel="stylesheet">
+        <link href="/static/admin/vendor/select2/select2-bootstrap4.css?v=1.4.6" rel="stylesheet">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+        <link rel="stylesheet" href="/static/plugins/fontawesome-free/css/all.min.css">
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" href="/static/plugins/css/adminlte.min.css">
+
+    {% endblock head_css%}
+  </head>
+<body class="hold-transition skin-blue sidebar-mini">
+
+{% block page_body %}
+  <!-- barra Lateral -->
+  <aside class="main-sidebar sidebar-light-info  elevation-4">
+    <!-- Brand Logo -->
+          {% block brand %}
+            <a href="{{ admin_view.admin.url }}" class="brand-link logo navbar-light" style="text-align:center">
+                <img src="/static/img/proyecto.png" alt="Admin Logo" height="40" >
+                <span>&nbsp;</span>
+            </a>
+        {% endblock brand%}
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Sidebar user panel (optional) -->
+    <div class="user-panel mt-3 pb-3 mb-3 d-flex" style="flex-wrap: wrap;">
+          <div class="pull-left image">
+            <i class="fa fa-user-circle" style="color: grey; font-size: 2.5em;"></i>
+          </div>
+          <div class="info nav-header">
+            <p>
+             {% if current_user.first_name -%}
+                <a href="" class="d-block">
+                  {{ current_user.first_name }} - Logout
+                </a>
+             {% else -%}
+                <a href="{{ url_for('security.logout') }}" class="d-block">
+                  {{ current_user.email }} <br> Logout
+                </a>
+             {%- endif %}
+           </p>
+
+         </div>
+
+
+       </div>
+
+      <!-- Menu Lateral -->
+       <!-- Menu Lateral -->
+      <nav class="mt-2">
+        {% block main_menu %}
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                <li class="nav-header">Main Menu</li>
+                {% for item in admin_view.admin.menu() %}
+                    {%- if item.is_category() -%}
+                      {% set children = item.get_children() %}
+                      {%- if children %}
+                        {% set class_name = item.get_class_name() %}
+
+                        <li class="nav-item has-treeview {{ 'menu-open' if item.is_active(admin_view) else ''}}">
+                              <a href="#" class="nav-link {{ 'active' if item.is_active(admin_view) else ''}}" >
+
+                                  {% if item.name == 'Gestión del Visor' %}
+                                    <i class="nav-icon fas fa-project-diagram"></i>
+                                  {% elif item.name == 'Gestión de Usuarios' %}
+                                    <i class="nav-icon fas fa-users"></i>
+                                  {% elif item.name == 'Análisis' %}
+                                    <i class="nav-icon fas fa-chart-pie"></i>
+                                  {% elif item.name == 'Gestión de Geoserver' %}
+                                    <i class="nav-icon fa fa-globe"></i>
+                                  {% endif %}
+                                  <p>{{ item.name }}<i class="fas fa-angle-left right"></i></p>
+                              </a>
+                              <ul class="nav nav-treeview">
+                              {%- for child in children -%}
+                                {% set class_name = child.get_class_name() %}
+                                <li class="nav-item {% if class_name %}{{class_name}}{% endif %}">
+                                {%- if child.is_active(admin_view) %}
+                                   <a href="{{ child.get_url() }}" class="nav-link active{% if class_name %} {{class_name}}{% endif %}">
+                                {% else %}
+                                    <a href="{{ child.get_url() }}" class="nav-link">
+                                {%- endif %}
+                                      <i class="nav-icon {{ child.icon_type }} {{ child.icon_value }}"></i> <p> {{ child.name }}</p></a>
+                                </li>
+                              {%- endfor %}
+                              </ul>
+                        </li>
+                      {% endif %}
+                    {%- else %}
+
+                        {%- if item.is_accessible() and item.is_visible() -%}
+                        <li class="nav-item">
+                            <a href="{{ item.get_url() }}" class="nav-link {{ 'active' if item.is_active(admin_view) else ''}}">
+                                {% if item.icon_value %}
+                                    <i class="nav-icon {{ item.icon_type }} {{ item.icon_value }}"></i><p>{{ item.name }}</p>
+                                {% endif %}
+                                {% if item.name =="Inicio" %}
+                                    <i class="nav-icon fa fa-home"></i> Inicio
+                                {% endif %}
+
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endblock %}
+      </nav>
+      <!-- /.menu lateral -->
+    </div>
+    <!-- /.barra lateral -->
+  </aside>
+
+ <!-- Menu superior -->
+  <nav class="main-header navbar navbar-expand navbar-white navbar-light-blue" >
+    <!-- Left navbar links -->
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+      </li>
+    </ul>
+<div class="logo-lg" style="flex: 1 1 auto; text-align:center"> <img src="/static/img/logo1.png" alt="Admin Logo" height="40" sytle="margin:auto;display:block"></div>
+    <!-- Right navbar links -->
+    <ul class="navbar-nav ml-auto">
+        <li class="nav-item dropdown">
+        <a class="nav-link" data-toggle="dropdown" href="#">
+          <i class="fa fa-user-circle" style="color: grey; font-size: 2em;"></i>
+        </a>
+        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+            <a class="dropdown-item" href="/Usuarios/"><i class="fa fa-user"></i> Perfil Usuario</a>
+
+          <div class="dropdown-divider"></div>
+          <a href="{{ url_for('security.logout') }}" class="dropdown-item dropdown-footer">Logout</a>
+        </div>
+      </li>
+
+
+    </ul>
+  </nav>
+  <!-- /.menu superior -->
+
+<div class="content-wrapper">
+{% if request.path == '/' %}
+    <!-- Estás en la página de inicio -->
+    <div class="row" style="padding:20px;width:100%">
+        <div class="col-12">
+            <h2>Plataforma WebGIS para la Investigación del Potencial de la Fotovoltaica Flotante en Zonas de Regadío de Ávila mediante Análisis Geoespacial Multicriterio</h2>
+
+        </div>
+        <div class="row justify-content-center align-items-center pt-5">
+            <div class="col-lg-6 col-md-6 col-12 mb-5 d-flex">
+                <div class="card w-100">
+                    <div class="row g-0">
+
+                        <!-- Imagen -->
+                        <div class="col-4 pr-0">
+                            <img src="/static/img/fondo-login.jpg"
+                                 alt="Placa solar"
+                                 class="img-fluid h-100"
+                                 style="object-fit: cover;">
+                        </div>
+
+                        <!-- Contenido -->
+                        <div class="col-8 d-flex flex-column pl-0">
+
+                            <div class="card-body">
+                                <h3 class="card-title text-center text-bold w-100 mb-3">
+                                    Plataforma WebGIS
+                                </h3>
+
+                                <p class="card-text text-center">
+                                    Análisis y compilación de datos para la selección de emplazamientos
+                                </p>
+                            </div>
+
+                            <div class="card-footer text-center">
+                                <a href="/herramienta" class="btn btn-success">
+                                    Acceder
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    {% block messages %}
+      {{ layout.messages() }}
+    {% endblock %}
+    <!-- No estás en la página de inicio -->
+    {% block body %}
+
+    {% endblock body %}
+
+{% endif %}
+  </div>
+
+  <!-- /.content-wrapper -->
+  <footer class="main-footer" style="display:flex; justify-content: space-between; align-items: center; height: 70px;">
+         <strong>Copyright &copy; 2025 - All rights reserved.</strong>
+        <img src="/static/img/tidopLogo.png" alt="Admin Logo" height="40">
+  </footer>
+{% endblock page_body%}
+
+{% block tail_js %}
+
+  <!-- jQuery -->
+  <script src="/static/plugins/jquery/jquery.min.js"></script>
+  <script src="/static/plugins/jquery-ui/jquery-ui.min.js"></script>
+  <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+  <script>
+    $.widget.bridge('uibutton', $.ui.button)
+  </script>
+  <script src="/static/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ admin_static.url(filename='vendor/moment.min.js') }}" type="text/javascript"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/plugins/js/adminlte.js"></script>
+
+    <script src="{{ admin_static.url(filename='vendor/select2/select2.min.js') }}" type="text/javascript"></script>
+  <!-- AdminLTE App -->
+<script src="{{url_for('static',filename='js/app.min.js')}}"></script>
+
+
+{% if admin_view.extra_js %}
+    {% for js_url in admin_view.extra_js %}
+        <script src="{{ js_url }}" type="text/javascript"></script>
+    {% endfor %}
+{% endif %}
+
+
+
+{% endblock tail_js%}
+
+{% block tail %}
+{% endblock tail %}
+
+</body>
+</html>

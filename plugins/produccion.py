@@ -380,5 +380,109 @@ def cal_Produccion(dataGIS, tafEnergy=None):
         #print("resultados Embalse: ", resultsEmbalse)
         print('El tiempo que tarda en correr es [min]: ', round((t1-t0)/60,2))
         return resultsEmbalse
-        
-        
+
+
+def makeCalcs_multicriterio(data, ModeloSolar, datoSolar):
+
+
+    ###############################################################################
+    #  PASO 1: Extraer todos los datos que vienen del gis en un diccioanrio
+    ###############################################################################
+
+    Latitud = data['latitud']  # [º]
+    Longitud = data['longitud']  # [º]
+    SupFVMax = float(data['area'])  # [m2]
+
+    LongitudPanel = float(data['panel']['Long Side'])  # [m]
+    AnchoPanel = float(data['panel']['Short Side'])  # [m]
+    #    EspesorPanel = float(panel["Espesor"])     # [m]
+    PotPico = float(data['panel']['Pmax']) / 1000  # [kW]
+
+    # print(PotPico)
+
+    SupPaneles = LongitudPanel * AnchoPanel
+
+    Inclinacion = float(data['inclinacion'])
+    Orientacion = float(data['orientacion'])
+
+    FechaInicio = data['fechaInicio']
+    Fechafinal = data['fechaFin']
+
+    TONC = float(data['panel']['NOCT'])
+
+    NumPaneles = float(data['numPaneles'])
+
+    HoraDelAnio = int(data['horaDelAnio'])
+    #######################################################################################
+    # PASO 2. OBTENEMOS EL NUMERO DE PANELES
+    #####################################################################################
+    #   Si  quiere que se le calcule numPaneles debería ser -1
+    if NumPaneles == -1:
+        NumPaneles = NumMaxPaneles(Latitud, Inclinacion, LongitudPanel, AnchoPanel, SupFVMax)
+    else:
+        NumPanelesMax = NumMaxPaneles(Latitud, Inclinacion, LongitudPanel, AnchoPanel, SupFVMax)
+        if NumPaneles <= NumPanelesMax:
+            NumPaneles = NumPaneles
+        else:
+            NumPaneles = NumPanelesMax
+            print('El numero de paneles introducido supera al máximo permitido')
+
+    ####################################################################################
+    # PASO 4. CORREGIMOS IRRADIANCIA
+    #######################################################################################
+
+    BIPV = (data['panel']['BIPV'])
+    Irradiancia = Inclinationcorrection(datoSolar, Inclinacion, Orientacion, Latitud, Longitud, FechaInicio, Fechafinal,
+                                        BIPV)
+
+    ####################################################################################
+    # PASO 5. CALCULO DE PRODUCCION
+    ###################################################################################
+
+    # Calculo de la temperatura con sistema de refrigeracion
+
+    TemperaturaRef = rf.Refrigeracion(Irradiancia)
+    Temperatura = rf.SinRefrigeracion(Irradiancia, TONC)
+
+    #    print(TemperaturaRef)
+    if ModeloSolar == 'Modelo_Diodo_Simple':
+        # Dentro de la funcion calcProduccionAnual hay que llamar a los datos de los paneles del SIG
+        EnergiaAnual = calcProduccionAnual(Temperatura, Irradiancia, NumPaneles, data)
+        EnergiaAnualRef = calcProduccionAnual(TemperaturaRef, Irradiancia, NumPaneles, data)
+    elif ModeloSolar == 'Modelo_energetico':
+        EnergiaAnual = calcProduccionAnualSimplified(Temperatura, Irradiancia, NumPaneles, data)
+        EnergiaAnualRef = calcProduccionAnualSimplified(TemperaturaRef, Irradiancia, NumPaneles, data)
+
+    # print ("EnergiaAnualRef",EnergiaAnualRef.shape[0])
+
+    results = {}
+    results['energiaAnual'] = EnergiaAnual
+    results['energiaAnualRef'] = EnergiaAnualRef
+
+
+    # CAPACITY FACTOR [Escalar]
+    CFRef = kpi.CapacityFactor(NumPaneles, sum(EnergiaAnualRef) * 10 ** -3, PotPico)
+    results['CFRef[%]'] = str(round(CFRef, 2))
+
+
+    # EMISIONES EmisionesEvitadasAnual [8760 valores] y EmisionesEvitadasVidaUtil [Escalar]
+    EmisionesEvitadasAnual, EmisionesEvitadasVidaUtil = kpi.Emisiones(sum(EnergiaAnual))
+    results['emisionesEvitadasAnual[MtCO2]'] = str(round(EmisionesEvitadasAnual, 2))
+
+    # LCOE [Escalar]
+    lcoeRef = kpi.LCOE(sum(EnergiaAnualRef) * 10 ** -3, NumPaneles, PotPico, vg.PrecioWp_Flotante, vg.CosteOM_Flotante)
+    results['LCOERef[€/MWh]'] = str(round(lcoeRef, 2))
+
+    return results
+
+
+
+def cal_Produccion_multicriterio(dataGIS, datoSolar):
+    # ModeloSolar='Modelo_Diodo_Simple' # 'Modelo_energetico' #Tiene que venir del GIS Podemos comparar a ver si aporta algo el Diodo simple con MPPT
+    ModeloSolar = dataGIS['modeloSeleccionado']  # 'Modelo_energetico'
+    resultsEmbalse = makeCalcs_multicriterio(dataGIS, ModeloSolar, datoSolar)
+    resultsEmbalse["fechaInicio"] = dataGIS['fechaInicio']
+    resultsEmbalse["fechaFin"] = dataGIS['fechaFin']
+    # print("resultados Embalse: ", resultsEmbalse)
+
+    return resultsEmbalse

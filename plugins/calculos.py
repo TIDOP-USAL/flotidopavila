@@ -19,13 +19,12 @@ from plugins.EDAS import edas
 from plugins.MABAC import mabac
 from plugins.CRITIC import critic
 from plugins.AHP import ahp, WeightedNormalizedDecisionMatrix,FinalRankingAlternatives,NormalizedDecisionMatrix
-
-from plugins.produccion import cal_Produccion
-
+from plugins.plugins.Generacion_solar import callPVGIS
+from plugins.produccion import cal_Produccion_multicriterio
 from plugins.produccion import cargar_tarifa_entsoe
-
-
-def matrizX(criterios, omegaC, Signo, cuenca, paneles, datos_entsoe, Metodo, ponderacion):
+from extensions import db,app
+from admin.modelAnalisis import Analisis
+def matrizX(criterios, omegaC, Signo, cuenca, paneles, datos_entsoe, ruta, sufijoNombre):
     '''
     Genera una matriz X a partir de los datos que se leen de csv obtenidos del SIG
     :param criterios: array que indica si se debe on incluir dicho criterio en la matriz x
@@ -95,7 +94,7 @@ def matrizX(criterios, omegaC, Signo, cuenca, paneles, datos_entsoe, Metodo, pon
         omega.append(omegaC[7])
         borrados.append(0)
 
-    Path = os.path.join(PathBase, 'Results', cuenca+'_'+Metodo+'_'+ponderacion+'_datosUnidos.csv')
+    Path = os.path.join(ruta, sufijoNombre+'datosUnidos.csv')
     datos.to_csv(Path, index=False)
 
     matrizX = pd.concat(matrizX, axis=1).to_numpy()
@@ -103,7 +102,7 @@ def matrizX(criterios, omegaC, Signo, cuenca, paneles, datos_entsoe, Metodo, pon
     return datos['Pos'].to_numpy(), datos['Longitud'].to_numpy(), datos['Latitud'].to_numpy(), matrizX, valueSign, omega
 
 def calcularLCOEyEmisionesyCF(paneles, posiciones, datos_entsoe):
-    TafEnergy = cargar_tarifa_entsoe(datos_entsoe["fecha_inicio"], datos_entsoe["fecha_fin"], datos_entsoe["country_code"])
+    #TafEnergy = cargar_tarifa_entsoe(datos_entsoe["fecha_inicio"], datos_entsoe["fecha_fin"], datos_entsoe["country_code"])
     PathBase = os.path.dirname(os.path.abspath(__file__))
     Path = os.path.join(PathBase, '..','static','datos','union.geojson')
     embalses = gpd.read_file(Path)
@@ -111,15 +110,19 @@ def calcularLCOEyEmisionesyCF(paneles, posiciones, datos_entsoe):
     Emisiones = []
     CF = []
     Energia = []
+    embalse = embalses.iloc[posiciones[0]]
+    geometry = embalse['geometry'].centroid
+    Latitud = geometry.y
+    Longitud = geometry.x
+    datoSolar = callPVGIS(Latitud, Longitud)
     for posicion in posiciones:
     #for index, embalse in embalses.iterrows():
-        print("posicion:",posicion)
         embalse = embalses.iloc[posicion]
         geometry = embalse['geometry'].centroid
         paneles['area'] = embalse['area']  # *area embalse
         paneles['longitud'] = geometry.x
         paneles['latitud'] = geometry.y
-        resultado = cal_Produccion(paneles, TafEnergy)
+        resultado = cal_Produccion_multicriterio(paneles,datoSolar)
         LCOE.append(float(resultado["LCOERef[€/MWh]"]))
         Emisiones.append(float(resultado["emisionesEvitadasAnual[MtCO2]"]))
         CF.append(float(resultado["CFRef[%]"]))
@@ -154,16 +157,16 @@ def mainMCDM(X, omega, signo, Metodo):
 '''Funcion para generar un geojson con los resultados del metodo multicriterio, se recibe el id, longitud, latitud, ranking, valores, cuenca, 
 metodo y ponderacion para generar el geojson con las propiedades necesarias para mostrar los resultados en la vista'''
 
-def generateGeoJsonyCSV(id, longitude, latitude, ranking, values, cuenca, Metodo, ponderacion):
+def generateGeoJsonyCSV(id, longitude, latitude, ranking, values, ruta, sufijoNombre):
     features = []
     '''print("longitud values**************",len(values))
     print(ranking)
     print("longitud longitude*******",len(longitude))
     print(longitude)
     print(latitude)'''
-    PathBase =os.path.dirname(os.path.abspath(__file__))
-    PathGeojson = os.path.join(PathBase, 'Results', cuenca+'_'+ponderacion+'_'+Metodo+'.geojson')
-    nameFileResult = os.path.join(PathBase, 'Results', cuenca+'_'+ponderacion+'_'+Metodo+'_Resultados.csv')
+
+    PathGeojson = os.path.join(ruta, sufijoNombre+'Resultados.geojson')
+    nameFileResult = os.path.join(ruta, sufijoNombre+'Resultados.csv')
     fileReuslt = open(nameFileResult, "w")
     fileReuslt.write('Id;Ranking;Value\n')
     for i in range(len(ranking)):
@@ -205,7 +208,7 @@ def generateGeoJsonyCSV(id, longitude, latitude, ranking, values, cuenca, Metodo
 
     with open(PathGeojson, 'w') as f:
         json.dump(geojson, f, indent=4)
-    return geojson
+    return geojson, nameFileResult
 
 
 
@@ -287,7 +290,15 @@ def MatrizM(MatrizCopareada):
     return M
 
 
-def calsEmbalses(datos):
+def calsEmbalses(datos, analisis_id, fecha_creacion, ruta):
+
+    db.session.remove()
+    db.session.configure(bind=db.engine)
+    AnalisisGuardado = db.session.query(Analisis).get(analisis_id)
+    AnalisisGuardado.estado = "Procesando"
+    AnalisisGuardado.metodo = datos["metodo"]
+    db.session.commit()
+
     t0 = time.time()
     critery = datos["criterios"]["Criterios"]
     omegaC = datos["criterios"]["OmegaC"]
@@ -295,6 +306,7 @@ def calsEmbalses(datos):
     Metodo = datos["metodo"]
     ponderacion =datos["ponderacion"]
     paneles = datos["paneles"]
+    sufijoNombre = cuenca + '_' + ponderacion + '_' + Metodo + '_' + fecha_creacion+ '_'
 
     print(f'critery {critery}')
     print(f'omegaC {omegaC}')
@@ -310,7 +322,7 @@ def calsEmbalses(datos):
 
     Signo = ['+', '-', '-', '-','-', '+', '+', '+']
 
-    pos, longitude, latitude, X, signo, omega = matrizX(critery, omegaC, Signo, cuenca, paneles, datos_entsoe, Metodo, ponderacion)
+    pos, longitude, latitude, X, signo, omega = matrizX(critery, omegaC, Signo, cuenca, paneles, datos_entsoe, ruta, sufijoNombre)
 
     if ponderacion == "Arbitrario":
         pesos = omega
@@ -323,17 +335,20 @@ def calsEmbalses(datos):
         pesos = omega
 
     #Guardo los pesos del multicriterio en un csv
-    PathBase =os.path.dirname(os.path.abspath(__file__))
-    Path = os.path.join(PathBase, 'Results', cuenca+'_'+ponderacion+'_'+Metodo+'_Pesos.csv')
+
+    Path = os.path.join(ruta, sufijoNombre+'Pesos.csv')
     hof_df = pd.DataFrame(pesos)
     hof_df.to_csv(Path)
+    AnalisisGuardado.ficheroPesos = Path
 
     ranking, value = mainMCDM(X, pesos, signo, Metodo)
-    geoJson = generateGeoJsonyCSV(pos, longitude, latitude, ranking, value, cuenca, Metodo, ponderacion)
-
+    geoJson, nombreFicheroResultados = generateGeoJsonyCSV(pos, longitude, latitude, ranking, value, ruta, sufijoNombre)
+    AnalisisGuardado.ficheroResultados = nombreFicheroResultados
     tf = time.time()
     print(f'Tiempo total: {tf-t0} segundos')
-
+    AnalisisGuardado.tiempo = round(tf-t0, 2)
+    AnalisisGuardado.estado = "Finalizado"
+    db.session.commit()
     return {"mensaje":geoJson}
 
 

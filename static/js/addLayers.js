@@ -14,9 +14,9 @@ async function loadLayers() {
     for (i=0; i<lineas.length; i++) {
         visible = checkIfVisible(lineas[i].nombreCapa, lineas[i].mostrar);
         addLayerLines(lineas[i].nombreSource, lineas[i].nombreCapa, lineas[i].nombreJson, lineas[i].color, visible, lineas[i].grosor);
-
         botones += addButton(lineas[i].texto,  lineas[i].nombreCapa, lineas[i].imagen, visible);
     }
+    addLayerLines("Rios", "Rios-layer", "static/datos/cuencas.geojson", "#0000FF", "visible", 2);
     for (i=0; i<rellenos.length; i++) {
         visible = checkIfVisible(rellenos[i].nombreCapa, rellenos[i].mostrar);
         addLayerFill(rellenos[i].nombreSource, rellenos[i].nombreCapa, rellenos[i].nombreJson, rellenos[i].color,  visible);
@@ -120,9 +120,14 @@ async function cambioEstado(Id, nombre_capa){
             map.setLayoutProperty(nombre_capa + "-borders", 'visibility', 'visible');
         }else
             map.setLayoutProperty(nombre_capa,'visibility', 'visible');
+        //Si se añade embalses o lagunas entonces se cambia la cuenca a la que esta seleccionada
+        if (nombre_capa == "Embalses-layer" || nombre_capa == "Lagunas-layer")
+            cambiarCuenca(cuenca);
 	}else{
-        if ( !$("#Embalses-layer").is(":checked") && !$("#Lagunas-layer").is(":checked"))
-            $(".cuencas").css({"display": "none"});
+        if ( !$("#Embalses-layer").is(":checked") && !$("#Lagunas-layer").is(":checked")) {
+            //$(".cuencas").css({"display": "none"});
+            map.setFilter("Rios-layer", null);
+        }
         if(existe) {
             map.setLayoutProperty(nombre_capa + "-fill", 'visibility', 'none');
             map.setLayoutProperty(nombre_capa + "-borders", 'visibility', 'none');
@@ -348,6 +353,35 @@ function addLayerFill(nombre_source, nombre_capa, nombre_json, color, mostrar) {
                 //'line-width': 4
             }
         });
+        map.on('mouseenter', nombre_capa+'-fill', () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', nombre_capa+'-fill', () => {
+        map.getCanvas().style.cursor = '';
+    });
+
+    map.on('click', nombre_capa+'-fill', (e) => {
+        let nombre = ''
+        if (e.features[0].properties.NOMBRE != null)
+           nombre = e.features[0].properties.NOMBRE;
+        else
+            nombre = '-';
+        nombre += ' (' + e.features[0].properties.cuenca + ')';
+        nombre += ' (' + e.features[0].properties.Tipo + ')';
+        $(".nombre").html(nombre);
+        const area = e.features[0].properties.area;
+        if (area != null)
+            $(".area-embalse").html(area);
+        let description = '<div class="boton-calcular">' +
+            '<button id="btnCalcular" onclick="calcularProduccionMasaDeAgua(' + e.lngLat.lng + ',' + e.lngLat.lat + ',' + area + ')" >' +
+            'Calcular' +
+            '</button>' +
+            '</div>';
+        description += '<div id="mensaje-embalse"></div></div>';
+        $(".boton-info-embalse").html(description);
+        $("#dialogo-embalse").dialog("open");
+    });
         map.setLayoutProperty(nombre_capa+"-fill",'visibility', mostrar);
         map.setLayoutProperty(nombre_capa+"-borders",'visibility', mostrar);
 }
@@ -356,26 +390,36 @@ function addLayerFill(nombre_source, nombre_capa, nombre_json, color, mostrar) {
 $(document).ready(function(event) {
     $(".input-cuencas").on("change", function () {
         cuenca = $(this).val();
-        if (cuenca === "Todos") {
-            if (map.getLayer("Embalses-layer-fill")) {
-                map.setFilter("Embalses-layer-fill", null);
-                map.setFilter("Embalses-layer-borders", null);
-            }
-            if (map.getLayer("Lagunas-layer-fill")) {
-                map.setFilter("Lagunas-layer-fill", null);
-                map.setFilter("Lagunas-layer-borders", null);
-            }
-        } else {
-            if (map.getLayer("Embalses-layer-fill")) {
-                map.setFilter("Embalses-layer-fill", ["==", ["get", "cuenca"], cuenca]);
-                map.setFilter("Embalses-layer-borders", ["==", ["get", "cuenca"], cuenca]);
-            }
-            if (map.getLayer("Lagunas-layer-fill")) {
-                map.setFilter("Lagunas-layer-fill", ["==", ["get", "cuenca"], cuenca]);
-                map.setFilter("Lagunas-layer-borders", ["==", ["get", "cuenca"], cuenca]);
-            }
-        }
+        cambiarCuenca(cuenca);
     });
 });
+function cambiarCuenca(cuenca) {
+    if (cuenca === "Todos") {
+        if (map.getLayer("Embalses-layer-fill")) {
+            map.setFilter("Embalses-layer-fill", null);
+            map.setFilter("Embalses-layer-borders", null);
+        }
+        if (map.getLayer("Lagunas-layer-fill")) {
+            map.setFilter("Lagunas-layer-fill", null);
+            map.setFilter("Lagunas-layer-borders", null);
+        }
+        if (map.getLayer("Rios-layer")) {
+            map.setFilter("Rios-layer", null);
+        }
+    } else {
+        if (map.getLayer("Embalses-layer-fill")) {
+            map.setFilter("Embalses-layer-fill", ["==", ["get", "cuenca"], cuenca]);
+            map.setFilter("Embalses-layer-borders", ["==", ["get", "cuenca"], cuenca]);
+        }
+        if (map.getLayer("Lagunas-layer-fill")) {
+            map.setFilter("Lagunas-layer-fill", ["==", ["get", "cuenca"], cuenca]);
+            map.setFilter("Lagunas-layer-borders", ["==", ["get", "cuenca"], cuenca]);
+        }
+        if (map.getLayer("Rios-layer")) {
+            map.setFilter("Rios-layer", ["==", ["get", "cuenca"], cuenca]);
+        }
+    }
+}
+
 
 

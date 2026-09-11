@@ -32,6 +32,18 @@ $(document).ready(function(){
             }
         }
     });
+    /**
+     * Esta funcion permite que el calendario de flatpickr se pueda usar dentro de un dialogo de jquery ui,
+     * ya que por defecto sale un error en la consola aunque si que funciona correctamente
+     */
+    $.widget("ui.dialog", $.ui.dialog, {
+        _allowInteraction: function(event) {
+            if ($(event.target).closest(".flatpickr-calendar").length) {
+                return true;
+            }
+            return this._super(event);
+        }
+    });
     $("#dialogo-multicriterio").dialog({
         modal: true,
         title: "Informacion",
@@ -44,6 +56,44 @@ $(document).ready(function(){
             }
         }
     });
+    $("#dialogo-embalse").dialog({
+        modal: true,
+        title: "Informacion",
+        autoOpen: false,
+        width: 'auto',
+        buttons: {
+            Cerrar: function () {
+                $(this).dialog("close");
+
+            }
+        }
+    });
+
+
+    calendarTime = flatpickr("#dia-hora", {
+            enableTime: true,
+            dateFormat: "d/m/Y H:i",
+            time_24hr: true,
+
+        });
+    const calendar = flatpickr("#fecha", {
+        mode: "range",
+        dateFormat: "d/m/Y",
+        ariaDateFormat: "Y-m-d",
+        clickOpens: true,
+        allowInput: false,
+        onChange: function(selectedDates) {
+            if (selectedDates.length === 2) {
+                // Habilitamos el input
+                calendarTime._input.disabled = false;
+                // Pasamos fechas individuales, NO el array completo
+                calendarTime.set("minDate", selectedDates[0]); // Fecha inicio
+                calendarTime.set("maxDate", selectedDates[1]); // Fecha fin
+            }
+        }
+    });
+
+
 });
 
 function changeStyleMap(){

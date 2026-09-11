@@ -1,0 +1,11 @@
+{% macro menu() %}
+    <ul class="nav nav-pills nav-sidebar flex-column">
+        {% for item in admin_view.menu() %}
+            <li class="nav-itenm {{ 'active' if item.is_active(admin_view) else '' }}">
+                <a class="nav-link" href="{{ item.get_url() }}">
+                    <i class="nav-icon fas fa-columns"></i>
+                    <p>{{ item.name }}</p></a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endmacro %}

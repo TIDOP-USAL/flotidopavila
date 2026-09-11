@@ -1,0 +1,373 @@
+{%  extends "layout.html" %}
+
+{% block content %}
+
+<script src="https://cdn.canvasjs.com/canvasjs.stock.min.js"></script>
+<div class="container">
+    <header>
+		<div class="logos">
+			<img src="/static/img/logo1.png" width="150" height = "76"/>
+			<img src="/static/img/proyecto.png" width="300" height = "80"/>
+			<img src="/static/img/tidopLogo.png" width="150" height = "62"/>
+		</div>
+		<nav id="main-menu">
+			<ul>
+
+
+			</ul>
+		</nav>
+    </header>
+</div>
+<div class="datos_produccion"></div>
+
+<div class ="filaResultados">
+  <div class="resultadosIzq van">
+    <h2>Valor Actual Neto (€)</h2>
+  </div>
+  <div class="resultadosDer ingresos">
+    <h2>Ingresos</h2>
+  </div>
+</div>
+
+<div class ="filaResultados">
+  <div class="resultadosIzq iv">
+    <h2>IV</h2>
+  </div>
+  <div class="resultadosDer pv">
+    <h2>PV</h2>
+  </div>
+</div>
+
+<div class ="filaResultados">
+  <div class="resultadosIzq energia">
+    <h2>Energia</h2>
+  </div>
+</div>
+<!--
+TODO: Cambiar ref o refrigerado pro flotante y añadir fechas en los graficos, cortar grafico pv los valores negativo
+-->
+<script>
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+
+    fetch(`/api/produccion/${id}`)
+    .then(res => res.json())
+    .then(data => {
+        console.log(data);
+        resultado = data["datos"];
+
+        let texto = "<h2>Solar Flotante</h2><span></span><h2>Solar en Tierra</h2><span></span>";
+        texto +=    "<span>Factor Capacidad (CF) Flotante[%]:</span><span>"+resultado["CFRef[%]"]+" </span>";
+        texto += "<span>Factor Capacidad (CF) [%]:</span><span>"+resultado["CF[%]"]+"</span>";
+        texto += "<span>LCOE Flotante[€/MWh]:</span><span>"+resultado["LCOERef[€/MWh]"]+"</span>";
+        texto += "<span>LCOE[€/MWh]:</span><span>"+resultado["LCOE[€/MWh]"]+"</span>";
+        texto += "<span>Aumento Ingreso Anual Flotante[%]:</span><span>"+resultado["aumentoIngresoAnualRefrigerar[%]"]+"</span><span></span><span></span>";
+
+        texto += "<span>Emisiones Evitadas Anual Flotante[MtCO2]:</span><span>"+resultado["emisionesEvitadasAnualRef[MtCO2]"]+"</span>";
+        texto += "<span>Emisiones Evitadas Anual[MtCO2]:</span><span>"+resultado["emisionesEvitadasAnual[MtCO2]"]+"</span>";
+        texto += "<span>Emisiones Evitadas Vida Util Flotante[MtCO2]:</span><span>"+resultado["emisionesEvitadasVidaUtilRef[MtCO2]"]+"</span>";
+        texto += "<span>Emisiones Evitadas Vida Util[MtCO2]:</span><span>"+resultado["emisionesEvitadasVidaUtil[MtCO2]"]+"</span>";
+        texto += "<span>Ingreso Anual Flotante[M€/año]:</span><span>"+resultado["ingresoAnualRefrigerado[M€/año]"]+"</span>";
+        texto += "<span>Ingreso Anual [M€/año]:</span><span>"+resultado["ingresoAnual[M€/año]"]+"</span>";
+        texto += "<span>Inversion Total[M€]:</span><span>"+Number(resultado["inversionTotal[M€]"]).toFixed(0)+"</span><span></span><span></span>";
+        texto += "<span><b>Fecha Incio Estudio:</b></span><span>"+resultado["fechaInicio"]+"</span>";
+        texto += "<span><b>Fecha Fin Estudio:</b></span><span>"+resultado["fechaFin"]+"</span>";
+        $(".datos_produccion").html(texto);
+        van(resultado);
+        ingresos(resultado);
+        iv(resultado);
+        pv(resultado);
+        energia(resultado);
+     });
+	function van(resultado) {
+		$(".van").append(
+				"    <div id=\"chartVan\" style=\"height: 450px; width: 100%;\"></div>");
+		datosGrafico = resultado["VAN"];
+		mostrarGraficoBarras(datosGrafico, "Valor Actual Neto(€)", "chartVan");
+	}
+	function ingresos(resultado) {
+		$(".ingresos").append(
+				"    <div id=\"chartIngresos\" style=\"height: 450px; width: 100%;\"></div>");
+		datosGrafico1 = resultado["ingreso0"];
+		datosGrafico2 = resultado["ingresoFlotante"];
+		mostrarGrafico(datosGrafico1, datosGrafico2, "Ingresos","Ingresos Flotante", "chartIngresos");
+	}
+	function iv(resultado) {
+		$(".iv").append(
+				"    <div id=\"chartIV\" style=\"height: 450px; width: 100%;\"></div>");
+		datosGrafico1 = resultado["i"];
+		datosGrafico2 = resultado["iRef"];
+		datosGraficoX = resultado["v"];
+		mostrarGraficoIPV(datosGrafico1, datosGrafico2,datosGraficoX, "IV", "IV Flotante", "chartIV");
+	}
+	function pv(resultado) {
+		$(".pv").append(
+				"    <div id=\"chartPV\" style=\"height: 450px; width: 100%;\"></div>");
+		datosGrafico1 = resultado["p"];
+		datosGrafico2 = resultado["pRef"];
+		datosGraficoX = resultado["v"];
+		mostrarGraficoIPV(datosGrafico1, datosGrafico2,datosGraficoX, "PV","PV Flotante", "chartPV");
+	}
+	function energia(resultado) {
+		$(".energia").append(
+				"    <div id=\"chartEnergia\" style=\"height: 450px; width: 100%;\"></div>");
+		datosGrafico1 = resultado["energiaAnual"];
+		datosGrafico2 = resultado["energiaAnualRef"];
+		mostrarGrafico(datosGrafico1, datosGrafico2, "Energia Anual","Energia Anual Flotante", "chartEnergia");
+	}
+	function mostrarGrafico(datosGrafico1, datosGrafico2, titulo1, titulo2, idContenedor) {
+
+        let data = [];
+
+        let dataPoints = [];
+        for (let i = 0; i < datosGrafico1.length; i++) {
+            const value = datosGrafico1[i];
+            dataPoints.push({x: i, y: value});
+        }
+
+        data.push({
+            name: titulo1,
+            type: "spline",
+            color: "#2b83ba",
+            dataPoints,
+            showInLegend: true,
+
+        });
+
+         dataPoints = [];
+        for (let i = 0; i < datosGrafico2.length; i++) {
+            const value = datosGrafico2[i];
+            dataPoints.push({x: i, y: value});
+        }
+
+        data.push({
+            name: titulo2,
+            type: "spline",
+            color: "#b83ba2",
+            dataPoints,
+            showInLegend: true,
+
+        });
+        const totalDatos = datosGrafico1.length;
+        const numRangos = 4;
+        const rango = Math.floor(totalDatos / numRangos);
+        //console.log(data)
+        window.stockChart = new CanvasJS.StockChart(idContenedor, {
+            animationEnabled: true,
+            exportEnabled: true,
+            charts: [{
+
+                axisY: {title: "Values", suffix: ""},
+                legend: {
+                    cursor: "pointer",
+                    fontSize: 16,
+
+                },
+                toolTip: {
+                    shared: true,
+                    contentFormatter: function (e) {
+                        let content = ``;
+                        e.entries.forEach(function (entry) {
+                            content += `<span style="color:${entry.dataSeries.color}">● ${entry.dataSeries.name}: </span><strong>${entry.dataPoint.y}</strong><br/>`;
+                        });
+                        return content;
+                    }
+                },
+                data: data
+            }],
+            rangeSelector: {
+              inputFields: {
+                startValue: 0,
+                endValue: totalDatos,
+                valueFormatString: "###0"
+              },
+
+              buttons: [{
+                label: rango,
+                range: rango,
+                rangeType: "number"
+              },{
+                label: rango*2,
+                range: rango*2,
+                rangeType: "number"
+              },{
+                label: rango*3,
+                range: rango*3,
+                rangeType: "number"
+              },{
+                label: "All",
+                rangeType: "all"
+              }]
+            },
+            navigator: {
+                slider: {
+                    minimum: 1,
+                    maximum: rango
+                }
+            },
+        });
+
+        stockChart.render();
+
+    }
+    function mostrarGraficoIPV(datosGrafico1, datosGrafico2,datosGraficoX, titulo1, titulo2, idContenedor) {
+
+        let data = [];
+
+        let dataPoints = [];
+        for (let i = 0; i < datosGrafico1.length; i++) {
+            const value = datosGrafico1[i];
+            if (value > 0) {
+                dataPoints.push({x: datosGraficoX[i], y: value});
+            }
+        }
+
+        data.push({
+            name: titulo1,
+            type: "spline",
+            color: "#2b83ba",
+            dataPoints,
+            showInLegend: true,
+
+        });
+        dataPoints = [];
+        for (let i = 0; i < datosGrafico2.length; i++) {
+            const value = datosGrafico2[i];
+            if (value > 0) {
+                dataPoints.push({x: datosGraficoX[i], y: value});
+            }
+        }
+
+        data.push({
+            name: titulo2,
+            type: "spline",
+            color: "#b83ba2",
+            dataPoints,
+            showInLegend: true,
+
+        });
+        const totalDatos = datosGrafico1.length;
+        const numRangos = 4;
+        const rango = Math.floor(totalDatos / numRangos);
+        window.stockChart = new CanvasJS.StockChart(idContenedor, {
+            animationEnabled: true,
+            exportEnabled: true,
+            charts: [{
+                //axisX: {valueFormatString: "DD MMM,YY"},
+                axisY: {title: "Values", suffix: ""},
+                legend: {
+                    cursor: "pointer",
+                    fontSize: 16,
+
+                },
+
+                data: data
+            }],
+            rangeSelector: {
+              inputFields: {
+                startValue: 0,
+                endValue: totalDatos,
+                valueFormatString: "###0"
+              },
+
+              buttons: [{
+                label: rango,
+                range: rango,
+                rangeType: "number"
+              },{
+                label: rango*2,
+                range: rango*2,
+                rangeType: "number"
+              },{
+                label: rango*3,
+                range: rango*3,
+                rangeType: "number"
+              },{
+                label: "All",
+                rangeType: "all"
+              }]
+            },
+
+        });
+
+        stockChart.render();
+
+
+    }
+    function mostrarGraficoBarras(datosGrafico, titulo, idContenedor) {
+
+        const colores = "#2b83ba";
+        let data = [];
+
+        let dataPoints = [];
+        for (let i = 0; i < datosGrafico.length; i++) {
+            const value = datosGrafico[i];
+            dataPoints.push({x: i, y: value});
+        }
+
+        data.push({
+            name: titulo,
+            type: "column",
+            color: colores,
+            dataPoints,
+            showInLegend: true,
+
+        });
+        const totalDatos = datosGrafico.length;
+        const numRangos = 4;
+        const rango = Math.floor(totalDatos / numRangos);
+        //console.log(data)
+        window.stockChart = new CanvasJS.StockChart(idContenedor, {
+            animationEnabled: true,
+            exportEnabled: true,
+            charts: [{
+                //axisX: {valueFormatString: "DD MMM,YY"},
+                axisY: {title: "Values", suffix: ""},
+                legend: {
+                    cursor: "pointer",
+                    fontSize: 16,
+
+                },
+                toolTip: {
+                    shared: true,
+                    contentFormatter: function (e) {
+                        const date = e.entries[0].dataPoint.x;
+                        let content = `<strong>${date}</strong><br/>`;
+                        e.entries.forEach(function (entry) {
+                            content += `<span style="color:${entry.dataSeries.color}">● ${entry.dataSeries.name}: </span><strong>${entry.dataPoint.y}</strong><br/>`;
+                        });
+                        return content;
+                    }
+                },
+                data: data
+            }],
+            rangeSelector: {
+              inputFields: {
+                startValue: 0,
+                endValue: totalDatos,
+                valueFormatString: "###0"
+              },
+
+              buttons: [{
+                label: rango,
+                range: rango,
+                rangeType: "number"
+              },{
+                label: rango*2,
+                range: rango*2,
+                rangeType: "number"
+              },{
+                label: rango*3,
+                range: rango*3,
+                rangeType: "number"
+              },{
+                label: "All",
+                rangeType: "all"
+              }]
+            },
+        });
+        stockChart.render();
+    }
+</script>
+{% endblock %}

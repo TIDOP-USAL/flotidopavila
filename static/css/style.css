@@ -356,7 +356,7 @@ header, .container{
     display: flex;
     flex-direction: column;
 }
-.info-embalse .boton-calcular, #mensaje-embalse, .boton-info-embalse .boton-calcular {
+.info-embalse .boton-calcular, #mensaje-embalse, #mensaje-embalse-produccion, .boton-info-embalse .boton-calcular {
     display: block; /* Sobrescribe el grid anterior */
     text-align: center;
     width: 100%;
@@ -371,7 +371,7 @@ header, .container{
     cursor: pointer;
     font-size: 14px;
 }
-#mensaje-embalse{
+#mensaje-embalse, #mensaje-embalse-produccion{
     display: none;
     padding: 10px 20px;
     background-color: #ff6666;
@@ -407,7 +407,7 @@ header, .container{
     border-radius: 5px;
     box-shadow: 0px 0px 2px black;
     width: 170px;
-    display: none;
+    /*display: none;*/
 }
 .cuencas p{
     margin-top: 0px;

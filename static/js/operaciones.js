@@ -39,7 +39,7 @@ function DialogCalcularDatos() {
     $("#mensaje-embalse").css({"display":"none"});
     $("#dialogo-multicriterio").dialog("open");
     $(".solo-anio").css({"display": "grid"});
-    $(".solo-anio input").focus();
+    $(".nombre-analisis input").focus();
 
 }
 /***
@@ -50,7 +50,12 @@ async function CalcularDatos()  {
     let  datos={};
 
     //El area del modelo lo devuelve en porcentaje no en metros como en la otra funcion
-
+    datos["nombre"] = $("#nombre-analisis").val();
+    if ( datos["nombre"] === "") {
+        $("#mensaje-embalse").html("Por favor, introduce nombre para guardar el estudio.");
+        $("#mensaje-embalse").css({"display": "block"});
+        return -1;
+    }
     datos["metodo"] = $("input[name='metodo']:checked").val();
     datos["ponderacion"] = $("input[name='ponderacion']:checked").val();
     datos["cuenca"] = cuenca;
@@ -418,6 +423,75 @@ function recuperarDatosTabla(){
 
 }
 
+
+/**
+ * Funcion para crear la tabla para el dialogo jerarquizado que se mostrara al elegir el metodo de ponderación AHP
+ */
+function crearTablaDialogoJerarquizado(){
+    //creamos los botones de la parte superior
+    let html = "";
+    // Botón criterios
+    html += `<input type="button" value="Tabla Criterios" class="tablatbCriterios active" onclick="mostrarTabla('tbCriterios')">`;
+    /*criteriosNombre.forEach((c,i)=>{
+        let clase =  nombreTablas[i+1];
+        let claseTabla = "tabla"+nombreTablas[i+1];
+        html += `<input type="button" value="Tabla ${c}" class="${claseTabla}" onclick="mostrarTabla('${clase}')">`;
+    });*/
+    //creamos la tabla criterios
+    html += crearTabla("tbCriterios", criteriosNombre);
+    //creamos el resto de tablas
+    /*criteriosNombre.forEach((c,i)=>{
+        let clase = nombreTablas[i+1];
+        if(subcriteriosNombre[i])
+            html += crearTabla(clase, subcriteriosNombre[i]);
+    });*/
+
+    $("#dialog-jerarquizado").html(html);
+}
+
+
+/**
+ * creamos una tabla para el dialogo jerarquizado, hay que crear una por cada criterio
+ * @param id identiticativo de la tabla
+ * @param nombres nombre de la categoria o subcategoria
+ * @returns {string} html de la tabla
+ */
+function crearTabla(id, nombres) {
+
+    let html = `<div class="tabla ${id}">`;
+
+    // Cabecera
+    html += `<div class="fil1">`;
+    html += `<div class="cel1">&nbsp;</div>`;
+    nombres.forEach((nombre, i) => {
+        html += `<div class="cel${i+2}">${nombre}</div>`;
+    });
+
+    html += `</div>`;
+
+    // Filas
+    for(let i=0;i<nombres.length;i++){
+        html += `<div class="fil${i+2}">`;
+        html += `<div class="cel1">${nombres[i]}</div>`;
+        for(let j=0;j<nombres.length;j++){
+            let evento="";
+            if(j>i){
+                evento=`onkeyup="cambiarValorCelda('${id}','${i+2}','${j+2}')"`
+            }
+            html+=`
+                <div class="cel${j+2}">
+                    <input type="text" size="5" value="1" ${evento}>
+                </div>
+            `;
+        }
+        html+=`</div>`;
+    }
+
+    html+=`</div>`;
+
+    return html;
+}
+
 /*****
  Los valores devueltos por index.py contienen un json con valores de los  ordenados
  con pintarResultados pinta esos valores en el mapa
@@ -488,71 +562,147 @@ async function pintarResultados(data){
 
 }
 
+/**
+ * Función para mostrar u ocultar los campos de fecha y número de paneles dependiendo de si se quiere calcular el número de paneles o no
+ */
+function calcularPaneles(){
+    if ($("#checkCalcularPaneles").is(':checked')) {
+        $(".fecha").hide();
+        $(".num-paneles").hide();
+        $(".solo-anio").css({"display": "grid"});
+    }else{
+        $(".fecha").show();
+        $(".num-paneles").show();
+        $(".solo-anio").css({"display": "none"});
+    }
+}
+/**
+ * Función para cambiar el rango de fechas del calendario dependiendo del año que se introduzca
+ * solo se usa cuando se marca calcular el numero de paneles
+ */
+function cambioAnio(){
+    const fechaInicio = flatpickr.parseDate("01/01/" +$("#anio").val(), "d/m/Y");
+    const fechaFin = flatpickr.parseDate("31/12/" +$("#anio").val(), "d/m/Y");
+    calendarTime.set("minDate", fechaInicio);
+    calendarTime.set("maxDate", fechaFin);
+}
 
 /**
- * Funcion para crear la tabla para el dialogo jerarquizado que se mostrara al elegir el metodo de ponderación AHP
+ * Función para calcular la producción de un embalse en base a los datos introducidos en el formulario
+ * @param longitud
+ * @param latitud
+ * @param area
+ * @returns {Promise<void>}
  */
-function crearTablaDialogoJerarquizado(){
-    //creamos los botones de la parte superior
-    let html = "";
-    // Botón criterios
-    html += `<input type="button" value="Tabla Criterios" class="tablatbCriterios active" onclick="mostrarTabla('tbCriterios')">`;
-    /*criteriosNombre.forEach((c,i)=>{
-        let clase =  nombreTablas[i+1];
-        let claseTabla = "tabla"+nombreTablas[i+1];
-        html += `<input type="button" value="Tabla ${c}" class="${claseTabla}" onclick="mostrarTabla('${clase}')">`;
-    });*/
-    //creamos la tabla criterios
-    html += crearTabla("tbCriterios", criteriosNombre);
-    //creamos el resto de tablas
-    /*criteriosNombre.forEach((c,i)=>{
-        let clase = nombreTablas[i+1];
-        if(subcriteriosNombre[i])
-            html += crearTabla(clase, subcriteriosNombre[i]);
-    });*/
+async function calcularProduccionMasaDeAgua(longitud, latitud, area) {
+    // Obtener los valores del formulario
+    let fechaInicio;
+    let fechaFin;
+    let numPaneles;
+    let inicioAno;
+    let horaDelAnio;
+    if ($("#checkCalcularPaneles").is(':checked')) {
 
-    $("#dialog-jerarquizado").html(html);
+        fechaInicio = "01/01/"+$("#anio").val();
+        fechaFin = "31/12/"+$("#anio").val();
+        inicioAno = new Date($("#anio").val(), 0, 1, 0, 0, 0);
+        numPaneles = -1;
+        const fechaSeleccionada =flatpickr.parseDate($(".calendar-dia-hora").val(), "d/m/Y H:i");
+        const diferenciaMs =fechaSeleccionada - flatpickr.parseDate(inicioAno, "d/m/Y H:i");
+        if (inicioAno.getFullYear() != fechaSeleccionada.getFullYear() ) {
+            $("#mensaje-embalse-produccion").html("Los años de las fechas son diferentes");
+            $("#mensaje-embalse-produccion").css({"display": "block"});
+
+            return;
+        }
+        horaDelAnio = Math.floor(diferenciaMs / (1000 * 60 * 60)) + 1;
+    }else{
+        fechaInicio = $("#fecha").val().split(" to ")[0];
+        fechaFin = $("#fecha").val().split(" to ")[1];
+        numPaneles = $("#numPaneles").val();
+
+        const diferenciaMs =flatpickr.parseDate($(".calendar-dia-hora").val(), "d/m/Y H:i") -  flatpickr.parseDate(fechaInicio, "d/m/Y H:i");
+        horaDelAnio = Math.floor(diferenciaMs / (1000 * 60 * 60)) + 1;
+    }
+    const orientacion = $("#orientacion").val();
+    const inclinacion = $("#inclinacion").val();
+    const ocupacion = $("#ocupacion").val();
+    const numDePanel = $("#modeloPanel").val();
+    const panelSeleccionado = datosPaneles[numDePanel];
+    const modeloSeleccionado = $('input[name="modelo-solar"]:checked').attr('id');
+
+    // Validar que todos los campos estén completos
+    if (!fecha || !numPaneles || !orientacion || !inclinacion || !numDePanel || !ocupacion) {
+        $("#mensaje-embalse-produccion").html("Por favor, complete todos los campos antes de calcular.");
+        $("#mensaje-embalse-produccion").css({"display": "block"});
+        return;
+    }
+
+    // Validar rangos
+    if (numPaneles < 1 && numPaneles != -1) {
+        $("#mensaje-embalse-produccion").html("El número de paneles debe ser mayor a 0.");
+        $("#mensaje-embalse-produccion").css({"display": "block"});
+        return;
+    }
+
+    if (orientacion < 0 || orientacion > 360) {
+        $("#mensaje-embalse-produccion").html("La orientación debe estar entre 0 y 360 grados.");
+        $("#mensaje-embalse-produccion").css({"display": "block"});
+        return;
+    }
+
+    if (inclinacion < 0 || inclinacion > 90) {
+        $("#mensaje-embalse-produccion").html("La inclinación debe estar entre 0 y 90 grados.");
+        $("#mensaje-embalse-produccion").css({"display": "block"});
+        return;
+    }
+    const datos={
+        fechaInicio: fechaInicio,
+        fechaFin: fechaFin,
+        numPaneles: numPaneles,
+        orientacion: orientacion,
+        inclinacion: inclinacion,
+        panel: panelSeleccionado,
+        longitud: longitud,
+        latitud: latitud,
+        area: area*ocupacion/100,
+        modeloSeleccionado: modeloSeleccionado,
+        horaDelAnio: horaDelAnio
+    }
+    $(".loader").css({"display":"block"});
+
+    const responseProduccion = await fetch('/calcular_produccion', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(datos)
+    })
+    const dataProduccion = await responseProduccion.json();
+    if (!responseProduccion.ok) {
+        $("#mensaje-embalse-produccion").html("Error: " + (dataProduccion.info || "Error al calcular la producción"))
+            .css("display", "block");
+        $(".loader").css({"display": "none"});
+        return;
+    }
+
+    window.location.href = `/calcular_produccion_vista?id=${dataProduccion.resultado_id}`;
+
 }
 
 
-/**
- * creamos una tabla para el dialogo jerarquizado, hay que crear una por cada criterio
- * @param id identiticativo de la tabla
- * @param nombres nombre de la categoria o subcategoria
- * @returns {string} html de la tabla
- */
-function crearTabla(id, nombres) {
+async function pintarResultadosAnalisis(url, cuenca){
 
-    let html = `<div class="tabla ${id}">`;
-
-    // Cabecera
-    html += `<div class="fil1">`;
-    html += `<div class="cel1">&nbsp;</div>`;
-    nombres.forEach((nombre, i) => {
-        html += `<div class="cel${i+2}">${nombre}</div>`;
-    });
-
-    html += `</div>`;
-
-    // Filas
-    for(let i=0;i<nombres.length;i++){
-        html += `<div class="fil${i+2}">`;
-        html += `<div class="cel1">${nombres[i]}</div>`;
-        for(let j=0;j<nombres.length;j++){
-            let evento="";
-            if(j>i){
-                evento=`onkeyup="cambiarValorCelda('${id}','${i+2}','${j+2}')"`
-            }
-            html+=`
-                <div class="cel${j+2}">
-                    <input type="text" size="5" value="1" ${evento}>
-                </div>
-            `;
-        }
-        html+=`</div>`;
-    }
-
-    html+=`</div>`;
-
-    return html;
+    const url_geojson = url.replace(".csv",".geojson");
+    const response = await fetch(url_geojson);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const resultadosDisco = await response.json();
+    let data=[];
+    data["geoJson"] =resultadosDisco;
+    pintarResultados(data);
+    if (cuenca == "Todos")
+        map.setFilter("Rios-layer", null);
+    else
+        map.setFilter("Rios-layer", ["==", ["get", "cuenca"], cuenca]);
+    $("#rio"+cuenca).attr("checked","checked");
 }

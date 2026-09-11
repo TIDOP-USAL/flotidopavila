@@ -1,0 +1,126 @@
+{% import 'admin/layout.html' as layout with context -%}
+{% import 'admin/static.html' as admin_static with context %}
+<!DOCTYPE html>
+<html>
+  <head>
+  <title>Instalación solar flotante</title>
+
+  {% block head_meta %}
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Flask-Admin dashboard login template">
+  <link rel="icon" href="/static/img/favicon.svg"/>
+  {% endblock head_meta %}
+
+  {% block head_css %}
+
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/plugins/fontawesome-free/css/all.min.css">
+  <!-- icheck bootstrap -->
+  <link rel="stylesheet" href="/static/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/plugins/css/adminlte.min.css">
+
+    <style type="text/css">
+        .login-page .login-box{
+            padding:20px 40px;
+            background-color: rgba(255,255,255,0.7);
+        }
+        .login-box, .register-box {
+            width: 410px;
+        }
+    </style>
+{% endblock stylesheets %}
+
+ {% endblock head_css%}
+  </head>
+  <body class="login-page" style="">
+    {% block content %}
+        {# Normaliza el nombre del form: acepta form o login_user_form (o login_form) #}
+        {% set form = (form if (form is defined) else (login_user_form if (login_user_form is defined) else (login_form if (login_form is defined) else None))) %}
+        {% if not form %}
+        <p>Error: formulario no disponible. Contacta con el administrador.</p>
+        {% else %}
+            <div class="container-fluid">
+            <div class="row vh-100">
+                <div class="col-md-6 d-flex align-items-center justify-content-center">
+                    <div class="row justify-content-center">
+                        <div class="login-logo row col-7 justify-content-center align-items-center" style="align-items: center;justify-content: space-between">
+
+                                <!--<div class="col-4"><img src="/static/img/tidopLogo.png" alt="Admin Logo" height="50"></div>-->
+                                <div class="col-6 "><img src="/static/img/proyecto.png" alt="Admin Logo" height="80" class="img-fluid"></div>
+                        </div>
+                        <div class="card col-7" style="max-width: 400px;width:400px">
+                            <div class="card-body login-card-body">
+                                <div class="card card-outline card-green">
+                                    <div class="card-header ">
+                                            <h3 class="card-title float-none text-center">
+                                                {% block messages %}
+                                                    {{ layout.messages() }}
+                                                {% endblock %}
+                                            </h3>
+                                    </div>
+                                    <div class="card-body login-card-body ">
+                                        <form action="login" method="POST">
+                                                {{ form.hidden_tag() }}
+                                                <div class="input-group mb-3">
+                                                    {{ form.email(placeholder="Email", class="form-control") }}
+                                                    <div class="input-group-append">
+                                                        <div class="input-group-text">
+                                                            <span class="fas fa-envelope"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="input-group mb-3">
+                                                    {{ form.password(placeholder="Password", class="form-control", type="password") }}
+                                                    <div class="input-group-append">
+                                                        <div class="input-group-text">
+                                                            <span class="fas fa-lock"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <div class="row">
+                                                <div class="col-8">
+                                                  <div class="icheck-primary">
+                                                    <input type="checkbox" id="remember">
+                                                    <label for="remember">
+                                                      Remerber Me
+                                                    </label>
+                                                  </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <button type=submit class="btn btn-block btn-flat btn-primary bg-green" style="background-color: #00b44e!important;border-color: #00b44e!important">
+                                                        Log in
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="login-logo row col-7 justify-content-center align-items-center" style="align-items: center;justify-content: space-between">
+
+                                <div class="col-4"><img src="/static/img/tidopLogo.png" alt="Admin Logo" height="50" class="img-fluid"></div>
+                                <!--<div class="col-6 "><img src="/static/img/proyecto.png" alt="Admin Logo" height="80" class="img-fluid"></div>-->
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 d-flex derecha justify-content-center align-items-center" style="background: url('static/img/fondo-login.jpg') no-repeat center center; background-size: cover;background-color: #4a2064;">
+
+                </div>
+            </div>
+        </div>
+
+
+        {% endif %}
+    {% endblock %}
+
+  </body>
+</html>
