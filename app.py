@@ -9,6 +9,11 @@ app = create_app()
 
 from admin.routes import routes
 from admin.build_sample_db import crearBaseDatos
+
+@app.route('/ping-test')
+def ping_test():
+    return "ping ok"
+
 @app.errorhandler(403)
 def forbidden_error(error):
     return redirect('/login')
