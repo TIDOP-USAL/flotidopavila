@@ -12,17 +12,17 @@ def callentsoe(country_code, start_date, end_date):
 
     for i in range(num_intentos):
         try:
-                prices = client.query_day_ahead_prices(country_code, start=start_date, end=end_date )
-                print("Llamada a ENTSO-E exitosa")
-                return prices
+            print(f"Intento {i+1} de {num_intentos} para llamar a ENTSO-E")
+            print(f"Consultando precios para {type(country_code).__name__} desde {type(start_date).__name__} hasta {type(end_date).__name__}")
+            prices = client.query_day_ahead_prices(country_code, start=start_date, end=end_date )
+            print("Llamada a ENTSO-E exitosa")
+
+            return prices
         except Exception as e:
             print("Error al llamar a ENTSO-E:", str(e))
             if i == num_intentos - 1:
                 raise
 
-        #print(prices)
-    
-        #prices.to_csv("prueba.csv", header=True)
 
 
     return 

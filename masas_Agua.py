@@ -32,16 +32,16 @@ se llama a la funcion calsEmbalses y se devuelve un geojson con los resultados
 '''
 @masas_agua_bp.route('/calcularEmbalsesAvila', methods=["POST"])
 def calcularEmbalses():
-    try:
-        datos = request.get_json()
-        usuario = current_user
-        id, fecha_creacion = guardar_datos_bd(datos["nombre"], datos["ponderacion"], datos["metodo"], cuenca=datos["cuenca"], usuario=usuario.id)
+    #try:
+    datos = request.get_json()
+    usuario = current_user
+    id, fecha_creacion = guardar_datos_bd(datos["nombre"], datos["ponderacion"], datos["metodo"], cuenca=datos["cuenca"], usuario=usuario.id)
 
-        ruta = os.path.join('plugins', 'Results', str(usuario.id))
-        datos = calsEmbalses(datos, id, fecha_creacion, ruta)
-        response = {"geoJson": datos['mensaje']},200
-        return response
-    except FileNotFoundError:
+    ruta = os.path.join('plugins', 'Results', str(usuario.id))
+    datos = calsEmbalses(datos, id, fecha_creacion, ruta)
+    response = {"geoJson": datos['mensaje']},200
+    return response
+    '''except FileNotFoundError:
         print("No se encuentra el archivo")
         return {"geoJson": "El archivo no fue encontrado"},400
 
@@ -52,7 +52,7 @@ def calcularEmbalses():
     except Exception as e:
         print("Ocurrió un error inesperado:", str(e))
         # Captura cualquier otro error inesperado (como errores de encoding o delimitadores)
-        return {"geoJson": str(e)},500
+        return {"geoJson": str(e)},500'''
 
 def guardar_datos_bd(texto, ponderacion, metodo, directorio="", cuenca="", usuario = 1):
     # Añado un registro a la tabla analisis

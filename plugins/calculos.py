@@ -116,6 +116,7 @@ def calcularLCOEyEmisionesyCF(paneles, posiciones, datos_entsoe):
     Longitud = geometry.x
     datoSolar = callPVGIS(Latitud, Longitud)
     for posicion in posiciones:
+        
     #for index, embalse in embalses.iterrows():
         embalse = embalses.iloc[posicion]
         geometry = embalse['geometry'].centroid
