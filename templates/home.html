@@ -204,8 +204,10 @@
 </div>
 <div id="dialog-message">
 </div>
-
-<div id="dialogo-embalse" style="display:none">
+<div id="dialogo-radio" style="display:none;">
+    <div class="mensaje-radio"></div>
+</div>
+<div id="dialogo-embalse" style="display:none;">
 	<div class="mensaje-embalse">
 		<div class="info-embalse"><b><span class="nombre">SAN BARTOLOMÉ DE TIRAJANA</span></b><br>
 			<div><span>Area: </span><span><span class="area-embalse">6698 m</span><sup>2</sup></span></div>
@@ -321,6 +323,7 @@
 
 	const url = resultado['url'];
 	mostrarMapa();
+
 	loadCriterios();
 	leerDatosCSV();
 	crearTablaDialogoJerarquizado();

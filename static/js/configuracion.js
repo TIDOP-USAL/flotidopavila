@@ -58,13 +58,25 @@ $(document).ready(function(){
     });
     $("#dialogo-embalse").dialog({
         modal: true,
-        title: "Informacion",
+        title: "Informacion Embalse",
         autoOpen: false,
         width: 'auto',
         buttons: {
             Cerrar: function () {
                 $(this).dialog("close");
 
+            }
+        }
+    });
+    $("#dialogo-radio").dialog({
+        modal: false,
+        title: "Radio Regadio",
+        autoOpen: false,
+        width: 'auto',
+        position: {my: "center center", at: "top top", of: window},
+        buttons: {
+            Cerrar: function () {
+                $(this).dialog("close");
             }
         }
     });

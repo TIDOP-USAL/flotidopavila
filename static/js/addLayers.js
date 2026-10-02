@@ -56,7 +56,14 @@ function addLayerRegadio(nombre_source, nombre_capa, mostrar) {
             'raster-fade-duration': 0
         }
     });
-     map.setLayoutProperty(nombre_capa,'visibility', visible);
+    map.setLayoutProperty(nombre_capa,'visibility', visible);
+
+    //Para poner la capa de regadio por debajo de todas las capas y que no tape nada
+    const capas = map.getStyle().layers;
+    const primeraCapa = capas.find(layer => layer.id !== 'background');
+    if (primeraCapa) {
+        map.moveLayer(nombre_capa, primeraCapa.id);
+    }
 }
 
  /**
@@ -321,39 +328,39 @@ function addLayerPoint(imagen, nombre_imagen, nombre_source, nombre_capa, nombre
  * @param color: color en hexadecimal en el que se van a pintar las lineas
  * @param mostrar: si se muetra u oculta la capa
  */
-function addLayerFill(nombre_source, nombre_capa, nombre_json, color, mostrar) {
+async function addLayerFill(nombre_source, nombre_capa, nombre_json, color, mostrar) {
     if (map.getSource(nombre_source) || mostrar == 'none') { return;}
     map.addSource(nombre_source, {
-            type: 'geojson',
+        type: 'geojson',
 // Use a URL for the value for the `data` property.
-            data: nombre_json
-        });
-        map.addLayer({
-            'id': nombre_capa+"-borders",
-            'type': 'line',
-            'source': nombre_source,
-            'layout': {
-                'line-join': 'round',
-                'line-cap': 'round'
-            },
-            'paint': {
-                'line-color': color,
-                //'line-width': 4
-                'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.5, 10, 3.5, 12, 9]
+        data: nombre_json
+    });
+    map.addLayer({
+        'id': nombre_capa+"-borders",
+        'type': 'line',
+        'source': nombre_source,
+        'layout': {
+            'line-join': 'round',
+            'line-cap': 'round'
+        },
+        'paint': {
+            'line-color': color,
+            //'line-width': 4
+            'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.5, 10, 3.5, 12, 9]
 
-            }
-        });
-        map.addLayer({
-            'id': nombre_capa+"-fill",
-            'type': 'fill',
-            'source': nombre_source,
-            'paint': {
-                'fill-color':color,//'#ffdddd',
-                'fill-opacity': 0.7
-                //'line-width': 4
-            }
-        });
-        map.on('mouseenter', nombre_capa+'-fill', () => {
+        }
+    });
+    map.addLayer({
+        'id': nombre_capa+"-fill",
+        'type': 'fill',
+        'source': nombre_source,
+        'paint': {
+            'fill-color':color,//'#ffdddd',
+            'fill-opacity': 0.7
+            //'line-width': 4
+        }
+    });
+    map.on('mouseenter', nombre_capa+'-fill', () => {
         map.getCanvas().style.cursor = 'pointer';
     });
 
@@ -361,31 +368,225 @@ function addLayerFill(nombre_source, nombre_capa, nombre_json, color, mostrar) {
         map.getCanvas().style.cursor = '';
     });
 
-    map.on('click', nombre_capa+'-fill', (e) => {
-        let nombre = ''
-        if (e.features[0].properties.NOMBRE != null)
-           nombre = e.features[0].properties.NOMBRE;
+    map.on('click', nombre_capa+'-fill',async (e) => {
+        let features = e.features[0];
+
+        const circulo = await pintarCirculo(e.lngLat.lng, e.lngLat.lat, radioRegadio)
+        await pintarRegadios(circulo);
+        mostrarDialogoRadio(features, e.lngLat.lng, e.lngLat.lat);
+    });
+    map.setLayoutProperty(nombre_capa+"-fill",'visibility', mostrar);
+    map.setLayoutProperty(nombre_capa+"-borders",'visibility', mostrar);
+}
+
+/**
+ * Funcion para pintar los regadios que intersectan con el circulo que se ha pintado en el mapa
+ * @param circulo
+ * @returns {Promise<void>}
+ */
+async function pintarRegadios(circulo) {
+    const response = await fetch("/static/datos/regadio.geojson");
+        let resultadosDisco = await response.json();
+        let features_regadio = [];
+        let interseccion = false;
+        for (let i = 0; i < resultadosDisco.features.length; i++) {
+            const poligono = resultadosDisco.features[i];
+            const intersectan = turf.booleanIntersects(
+                poligono,
+                circulo
+            );
+            if (intersectan) {
+                interseccion = true;
+                poligono.properties.seleccionado=true;
+                features_regadio.push(poligono);
+            }
+        }
+
+        if (interseccion) {
+            if(!map.getSource('interseccion')) {
+                map.addSource('interseccion', {
+                    type: 'geojson',
+                    data: turf.featureCollection(features_regadio)
+                });
+                map.addLayer({
+                    'id': "interseccion",
+                    'type': 'line',
+                    'source': 'interseccion',
+                    layout: {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    'paint': {
+                        'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.5, 10, 3.5, 12, 9],
+                        'line-color': ['case', ['get', 'seleccionado'],
+                            '#00dd00',
+                            '#000000'
+                        ],
+                    }
+                });
+                map.addLayer({
+                    'id': "interseccion-fill",
+                    'type': 'fill',
+                    'source': "interseccion",
+                    'paint': {
+                        'fill-color': ['case', ['get', 'seleccionado'],
+                            '#00cc00',
+                            '#000000'
+                        ],
+                        'fill-opacity': 0.7
+                        //'line-width': 4
+                    }
+                });
+                map.on('mouseenter', 'interseccion-fill', () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                });
+
+                map.on('mouseleave', 'interseccion-fill', () => {
+                    map.getCanvas().style.cursor = '';
+                });
+
+                map.on('click', 'interseccion-fill',async (e) => {
+                    let features = e.features[0];
+                    features.properties.seleccionado = !features.properties.seleccionado;
+                    const dn_pk = features.properties.dn_pk;
+                    for (let i = 0; i < features_regadio.length; i++) {
+                        if (features_regadio[i].properties.dn_pk === dn_pk) {
+                            features_regadio[i].properties.seleccionado = features.properties.seleccionado;
+                            break;
+                        }
+                    }
+                    map.getSource('interseccion').setData(turf.featureCollection(features_regadio));
+                });
+            }else{
+                map.getSource('interseccion').setData(turf.featureCollection(features_regadio));
+            }
+        }else
+            console.log("No hay interseccion");
+}
+/**
+ * Funcion para pintar un circulo en el mapa de un radio en km
+ * @param lng
+ * @param lat
+ * @param radioKm
+ * @returns {{type: string, geometry: {type: string, coordinates: *[][]}}}
+ */
+function pintarCirculo(lng, lat, radioKm) {
+    const circulo = crearCirculo(lng, lat, radioKm );
+
+        if (!map.getSource('punto_embalse')) {
+            map.addSource('punto_embalse', {
+                type: 'geojson',
+                data: circulo
+            });
+            map.addLayer({
+                'id': "punto_embalse",
+                'type': 'line',
+                'source': 'punto_embalse',
+                layout: {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.5, 10, 3.5, 12, 9],
+                    'line-color': '#cc0000',
+
+                }
+            });
+            map.addLayer({
+                id: 'punto_embalse_fill',
+                type: 'fill',
+                source: 'punto_embalse',
+                paint: {
+                    'fill-color': '#cc0000',
+                    'fill-opacity': 0.15
+                }
+            });
+        }else{
+            map.getSource('punto_embalse').setData(circulo);
+        }
+        return circulo;
+}
+
+/**
+ * Funcion para crear la geometria de un circulo en el mapa de un radio en km y un numero de puntos que forman el circulo
+ * @param lng
+ * @param lat
+ * @param radioKm
+ * @param numPuntos
+ * @returns {{type: string, geometry: {type: string, coordinates: [*[]]}}}
+ */
+function crearCirculo(lng, lat, radioKm, numPuntos = 64) {
+
+    const coordenadas = [];
+    const radioTierra = 6371; // km
+    const latRad = lat * Math.PI / 180;
+    const lngRad = lng * Math.PI / 180;
+    const distancia = radioKm / radioTierra;
+
+    for (let i = 0; i <= numPuntos; i++) {
+
+        const angulo = 2 * Math.PI * i / numPuntos;
+        const lat2 = Math.asin(
+            Math.sin(latRad) * Math.cos(distancia) +
+            Math.cos(latRad) * Math.sin(distancia) * Math.cos(angulo)
+        );
+
+        const lng2 = lngRad + Math.atan2(
+            Math.sin(angulo) * Math.sin(distancia) * Math.cos(latRad),
+            Math.cos(distancia) - Math.sin(latRad) * Math.sin(lat2)
+        );
+
+        coordenadas.push([
+            lng2 * 180 / Math.PI,
+            lat2 * 180 / Math.PI
+        ]);
+    }
+
+    return {
+        type: 'Feature',
+        geometry: {
+            type: 'Polygon',
+            coordinates: [coordenadas]
+        }
+    };
+}
+
+function mostrarDialogoRadio(features, lng, lat) {
+    let html = '<p>Radio de regadio: <input type="text" id="radioRegadio" value="' +radioRegadio+'" size="3"> km</p>';
+    html += '<div class="boton-calcular-embalses"><button id="btnActualizarRadio">Actualizar Radio</button></div>';
+    html += '<div class="boton-calcular-embalses"><button id="btnDialogoEmbalses">Calcular</button></div>';
+    $(".mensaje-radio").html(html);
+    $("#dialogo-radio").dialog("open");
+    $(document).off("click", "#btnActualizarRadio").on("click", "#btnActualizarRadio", async function () {
+        radioRegadio = $("#radioRegadio").val();
+        const circulo = await pintarCirculo(lng, lat, radioRegadio)
+        await pintarRegadios(circulo);
+    });
+    $(document).off("click", "#btnDialogoEmbalses").on("click", "#btnDialogoEmbalses", function () {
+        mostrarDialogoEmbalse(features, lng, lat);
+    });
+}
+function mostrarDialogoEmbalse(features, lng, lat) {
+    let nombre = ''
+        if (features.properties.NOMBRE != null)
+           nombre = features.properties.NOMBRE;
         else
             nombre = '-';
-        nombre += ' (' + e.features[0].properties.cuenca + ')';
-        nombre += ' (' + e.features[0].properties.Tipo + ')';
+        nombre += ' (' + features.properties.cuenca + ')';
+        nombre += ' (' + features.properties.Tipo + ')';
         $(".nombre").html(nombre);
-        const area = e.features[0].properties.area;
+        const area = features.properties.area;
         if (area != null)
             $(".area-embalse").html(area);
         let description = '<div class="boton-calcular">' +
-            '<button id="btnCalcular" onclick="calcularProduccionMasaDeAgua(' + e.lngLat.lng + ',' + e.lngLat.lat + ',' + area + ')" >' +
+            '<button id="btnCalcular" onclick="calcularProduccionMasaDeAgua(' + lng + ',' + lat + ',' + area + ')" >' +
             'Calcular' +
             '</button>' +
             '</div>';
         description += '<div id="mensaje-embalse"></div></div>';
         $(".boton-info-embalse").html(description);
         $("#dialogo-embalse").dialog("open");
-    });
-        map.setLayoutProperty(nombre_capa+"-fill",'visibility', mostrar);
-        map.setLayoutProperty(nombre_capa+"-borders",'visibility', mostrar);
 }
-
 
 $(document).ready(function(event) {
     $(".input-cuencas").on("change", function () {

@@ -362,7 +362,7 @@ header, .container{
     width: 100%;
     margin-top: 15px;
 }
-#btnCalcular{
+#btnCalcular, #btnDialogoEmbalses, #btnActualizarRadio{
     padding: 10px 20px;
     background-color: #4CAF50;
     color: white;
@@ -370,6 +370,15 @@ header, .container{
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
+}
+ #btnActualizarRadio {
+     background-color: #00619d;
+ }
+#btnDialogoEmbalses, #btnActualizarRadio{
+    margin: 10px 0px;
+}
+.boton-calcular-embalses{
+    text-align: center;
 }
 #mensaje-embalse, #mensaje-embalse-produccion{
     display: none;
